@@ -1,0 +1,56 @@
+---
+description: Guidelines for writing clean, maintainable, and human-readable code. Apply these rules when writing or reviewing code to ensure consistency and quality.
+globs: 
+alwaysApply: false
+---
+---
+description: Guidelines for writing clean, maintainable, and human-readable code. Apply these rules when writing or reviewing code to ensure consistency and quality.
+---
+
+# Code Guidelines
+
+### General Principles
+1. **Use Explicit Variable Names**: Prefer descriptive, explicit variable names over short, ambiguous ones to enhance code readability.
+2. **Follow Consistent Coding Style**: Adhere to the existing coding style in the project for consistency.
+3. **Modular Design & DRY (Don't Repeat Yourself)**: Design modular components and extract repeated code into reusable functions. Share common logic through proper abstraction and maintain single sources of truth.
+4. **Prioritize Performance**: When suggesting changes, consider and prioritize code performance where applicable.
+5. **Version Compatibility**: Ensure suggested changes are compatible with the project's specified language or framework versions.
+6. **Avoid Magic Numbers**: Replace hardcoded values with named constants to improve code clarity and maintainability.
+7. **Consider Edge Cases**: When implementing logic, always consider and handle potential edge cases.
+8. **Use Assertions**: Include assertions wherever possible to validate assumptions and catch potential errors early.
+9. **Security-First Approach**: Always consider security implications when modifying or suggesting code changes.
+
+### Error Handling & Testing
+10. **Effective Logging & Error Handling**:
+    - Implement robust error handling with appropriate recovery strategies
+    - Use different log levels (DEBUG, INFO, WARNING, ERROR, CRITICAL) appropriately
+    - Log inputs and outputs when communicating with external systems
+    - Include contextual information in log messages for easier troubleshooting
+11. **Test Coverage**: Suggest or include appropriate unit tests for new or modified code.
+
+### Architecture Principles
+12. **Follow SOLID Principles**:
+    - **Single Responsibility Principle (SRP)**: Each class should have only one responsibility.
+    - **Open/Closed Principle**: Open for extension, closed for modification.
+    - **Liskov Substitution Principle**: Subtypes must be substitutable for their base types.
+    - **Interface Segregation Principle**: Clients shouldn't depend on interfaces they don't use.
+    - **Dependency Inversion Principle**: Depend on abstractions, not concretions.
+
+### Naming & Documentation
+13. **Follow Naming Conventions**:
+    - Use PascalCase for class names (e.g., `CustomerAccount`).
+    - Use camelCase for methods and variables (e.g., `calculateTotal`, `userName`).
+14. **Write Smart Comments**: Make code self-documenting. Comment on why, not what. Document APIs, complex algorithms, and non-obvious side effects.
+
+### Project Structure Guidelines
+15. **Mappers**: Place mapper classes in `interfaces/rest/transform/mapper`
+16. **DTOs**: Generated via OpenAPI generator, located in `target/generated-sources/openapi/src/main/java/.../interfaces/rest/dto`
+17. **Write Operations**: Place in `src/main/java/.../application/commandservices`
+18. **Query Operations**: Place in `src/main/java/.../application/queryservices`
+19. **Single Implementations**: Application components with only one implementation do not need an additional interface
+20. **Events**: Should be placed in `src/main/java/.../model/event`
+21. **EventHandlers**: Should be placed in `interfaces/eventhandler`
+22. **configuration**: Application configuration classes should be placed in the `src/main/java/.../configuration` package
+
+
+

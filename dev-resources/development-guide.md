@@ -1,0 +1,56 @@
+# 使用 Spring AI 開發 MCP Server 教學
+
+## 下載專案
+
+
+從 Spring Initializr 下載專案 [範例專案](https://start.spring.io/#!type=gradle-project&language=java&platformVersion=3.4.4&packaging=jar&jvmVersion=21&groupId=io.github.samzhu&artifactId=gcp-auditmate-mcp-server&name=gcp-auditmate-mcp-server&description=Demo%20project%20for%20Spring%20Boot&packageName=io.github.samzhu.auditmate&dependencies=web,spring-ai-mcp-server,native,devtools,sbom-cyclone-dx)
+
+下載後解壓縮，使用 Visual Studio Code 開啟。
+
+## 開啟專案
+
+
+``` bash
+gcloud auth application-default login
+gcloud config set project csd-ct-lab
+```
+
+
+``` bash
+sdk install java 24.1.2.r23-nik
+
+sdk use java 24.1.2.r23-nik
+```
+
+通過以下命令確認 native-image 已正確安裝
+``` bash
+native-image --version
+```
+
+通過以下命令編譯 native image executable 並在 build/native/nativeCompile 目錄下生成可執行文件
+``` bash
+./gradlew clean nativeCompile
+
+./build-native.sh
+```
+
+
+/Users/samzhu/workspace/github-samzhu/gcp-auditmate-mcp-server/build/native/nativeCompile/gcp-auditmate-mcp-server
+
+
+
+路徑
+
+/Users/samzhu/Library/Logs/Claude/mcp.log
+/Users/samzhu/Library/Logs/Claude/mcp-server-gcp-auditmate-mcp-server.log
+
+
+
+dubug
+
+找出
+``` bash
+lsof -i :8080
+```
+
+esult.setStackTrace(getStackTraceAsString(e));

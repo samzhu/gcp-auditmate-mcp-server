@@ -1,0 +1,120 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.4.4'
+	id 'io.spring.dependency-management' version '1.1.7'
+	id 'org.graalvm.buildtools.native' version '0.10.6'
+	id 'org.cyclonedx.bom' version '1.10.0'
+}
+
+group = 'io.github.samzhu'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+}
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+ext {
+	set('springAiVersion', "1.0.0-M7")
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.ai:spring-ai-starter-mcp-server-webmvc'
+	compileOnly 'org.projectlombok:lombok'
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+	annotationProcessor 'org.projectlombok:lombok'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	
+	// Apache POI
+	implementation 'org.apache.poi:poi:5.4.1'
+	implementation 'org.apache.poi:poi-ooxml:5.4.1'
+	implementation 'org.apache.poi:poi-ooxml-full:5.4.1'
+	implementation 'org.apache.xmlbeans:xmlbeans:5.3.0'
+	
+	// GCP
+	implementation 'com.google.cloud:google-cloud-resourcemanager:1.62.0'                        // https://central.sonatype.com/artifact/com.google.cloud/google-cloud-resourcemanager
+	implementation 'com.google.cloud:google-cloud-kms:2.63.0'                                    // https://central.sonatype.com/artifact/com.google.cloud/google-cloud-kms
+	implementation 'com.google.cloud:google-cloud-compute:1.70.0'                                // https://central.sonatype.com/artifact/com.google.cloud/google-cloud-compute
+	implementation 'com.google.apis:google-api-services-serviceusage:v1-rev20250313-2.0.0'       // https://central.sonatype.com/artifact/com.google.apis/google-api-services-serviceusage
+	implementation 'com.google.api-client:google-api-client:2.7.2'                               // https://central.sonatype.com/artifact/com.google.api-client/google-api-client
+	implementation 'com.google.api-client:google-api-client-jackson2:2.7.2'                      // https://central.sonatype.com/artifact/com.google.api-client/google-api-client-jackson2
+	implementation 'com.google.auth:google-auth-library-oauth2-http:1.33.1'
+}
+
+dependencyManagement {
+	imports {
+		mavenBom "org.springframework.ai:spring-ai-bom:${springAiVersion}"
+	}
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
+
+// GraalVM 原生映像配置，主要針對 Apache POI
+
+graalvmNative {
+	binaries {
+		main {
+			jvmArgs = ['-Xmx12g', '-XX:MaxMetaspaceSize=1g']
+			buildArgs.add('--initialize-at-build-time=org.apache.poi,org.apache.commons,org.apache.logging,org.apache.xmlbeans')
+			buildArgs.add('--initialize-at-build-time=org.springframework.boot.logging.log4j2.SpringBootPropertySource')
+			buildArgs.add('--initialize-at-build-time=ch.qos.logback')
+			buildArgs.add('--initialize-at-build-time=org.slf4j')
+			buildArgs.add('--initialize-at-build-time=org.apache.logging.slf4j')
+			buildArgs.add('--initialize-at-build-time=org.openxmlformats')
+			buildArgs.add('--initialize-at-build-time=org.openxmlformats.schemas.officeDocument.x2006.customProperties.impl.PropertiesDocumentImpl')
+			buildArgs.add('--initialize-at-build-time=org.openxmlformats.schemas.officeDocument.x2006.extendedProperties.impl.PropertiesDocumentImpl')
+			buildArgs.add('--initialize-at-build-time=org.openxmlformats.schemas.spreadsheetml.x2006.main.CTWorkbook')
+			buildArgs.add('--initialize-at-build-time=org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTWorkbookImpl')
+			buildArgs.add('--initialize-at-build-time=org.openxmlformats.schemas.spreadsheetml.x2006.main.WorkbookDocument')
+			buildArgs.add('--initialize-at-build-time=org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.WorkbookDocumentImpl')
+			buildArgs.add('--initialize-at-build-time=org.openxmlformats.schemas.spreadsheetml.x2006.main.CTWorkbookPr')
+			buildArgs.add('--initialize-at-build-time=org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTWorkbookPrImpl')
+			buildArgs.add('--initialize-at-build-time=org.openxmlformats.schemas.spreadsheetml.x2006.main.CTBookViews')
+			buildArgs.add('--initialize-at-build-time=org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTBookViewsImpl')
+			buildArgs.add('--initialize-at-build-time=org.openxmlformats.schemas.spreadsheetml.x2006.main.CTBookView')
+			buildArgs.add('--initialize-at-build-time=org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTBookViewImpl')
+			buildArgs.add('--initialize-at-build-time=java.awt.Color')
+			buildArgs.add('--initialize-at-build-time=org.apache.poi.hssf.util.HSSFColor')
+			buildArgs.add('--initialize-at-build-time=java.beans.PropertyChangeSupport')
+			buildArgs.add('--initialize-at-build-time=java.beans.PropertyChangeSupport$PropertyChangeListenerMap')
+			buildArgs.add('--initialize-at-run-time=java.awt')
+			buildArgs.add('--initialize-at-run-time=sun.awt')
+			buildArgs.add('--initialize-at-run-time=sun.font')
+			buildArgs.add('--initialize-at-run-time=sun.java2d')
+			buildArgs.add('--initialize-at-run-time=sun.font.FontDesignMetrics')
+			buildArgs.add('--initialize-at-run-time=java.awt.image,java.lang.Math.PowCache')
+			buildArgs.add('--initialize-at-run-time=org.apache.poi.util.RandomSingleton')
+			buildArgs.add('--initialize-at-run-time=org.apache.poi.hpsf.PropertySet')
+			buildArgs.add('--initialize-at-run-time=org.apache.poi.util.ChainedProperties')
+			buildArgs.add('--initialize-at-run-time=org.apache.poi.ss.util.SheetUtil')
+			buildArgs.add('--initialize-at-run-time=org.apache.poi.ss.format.CellFormatPart')
+			buildArgs.add('-H:+ReportExceptionStackTraces')
+			buildArgs.add('-H:ReflectionConfigurationResources=META-INF/native-image/reflect-config.json')
+			buildArgs.add('-H:ResourceConfigurationResources=META-INF/native-image/resource-config.json')
+			buildArgs.add('-H:TraceClassInitialization=org.apache.poi')
+			buildArgs.add('-H:+UnlockExperimentalVMOptions')
+			buildArgs.add('-H:EnableURLProtocols=http,https')
+			buildArgs.add('-Djava.awt.headless=true')
+			buildArgs.add('-Dapple.awt.headless=true')
+			buildArgs.add('-Dorg.apache.poi.ss.disableAutoColumnWidth=true')
+			buildArgs.add('-Dorg.apache.poi.ss.format.disable.color=true')
+		}
+	}
+}

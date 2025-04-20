@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: gcp-auditmate-mcp-server
+  main:
+    banner-mode: off
+
+  ai:
+    mcp:
+      server:
+        stdio: true
+
+logging:
+  level:
+    root: off

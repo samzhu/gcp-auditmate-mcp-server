@@ -1,0 +1,40 @@
+{
+  "resources": {
+    "includes": [
+      {
+        "pattern": "\\QMETA-INF/poi-ooxml/\\E.*"
+      },
+      {
+        "pattern": "\\QMETA-INF/xmlgraphics-commons/\\E.*"
+      },
+      {
+        "pattern": "\\QORG/openxmlformats/schemas/\\E.*"
+      },
+      {
+        "pattern": "\\QORG/apache/poi/schemas/\\E.*"
+      },
+      {
+        "pattern": "\\Qorg/apache/poi/ss/formula/function\\E.*"
+      },
+      {
+        "pattern": "\\Qorg/apache/poi/ss/usermodel\\E.*"
+      },
+      {
+        "pattern": "\\Qorg/apache/poi/ss/formula\\E.*"
+      },
+      {
+        "pattern": "\\Qorg/apache/poi/ss\\E.*"
+      },
+      {
+        "pattern": "\\Qorg/apache/poi\\E.*"
+      },
+      {
+        "pattern": "\\QMETA-INF/services/\\E.*"
+      },
+      {
+        "pattern": "\\QMETA-INF/services/org.apache.poi.ss.formula.udf.UDFFinder\\E"
+      }
+    ]
+  },
+  "bundles": []
+} 
