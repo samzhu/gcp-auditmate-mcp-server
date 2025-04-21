@@ -53,3 +53,26 @@ dubug
 ``` bash
 lsof -i :8080
 ```
+
+下載執行檔 到你習慣的目錄 例如 /Users/samzhu
+
+```
+https://blog.samzhu.dev/gcp-auditmate-mcp-server/gcp-auditmate-mcp-server
+```
+
+接著打開 Claude desktop 設定檔, 例如我的 MAC 上路徑如下 `/Users/samzhu/Library/Application Support/Claude/claude_desktop_config.json`
+
+新增以下設定, 把 gcp-auditmate-mcp-server 新增到 mcpServers 設定中, command 記得改成你下載的執行檔路徑
+
+``` json
+{
+    "mcpServers": {
+        "gcp-auditmate-mcp-server": {
+            "command": "/Users/samzhu/gcp-auditmate-mcp-server"
+        }
+    }
+}
+```
+
+接著打開 Claude desktop, 你會看到 gcp-auditmate-mcp-server 已經在 mcpServers 設定中, 查看會像這樣
+

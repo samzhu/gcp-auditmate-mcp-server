@@ -65,10 +65,12 @@ jobs:
         env:
           JAVA_TOOL_OPTIONS: "-Xmx12g -XX:MaxMetaspaceSize=1g"
 
+      - name: Make MCP server executable
+        run: chmod +x build/native/nativeCompile/gcp-auditmate-mcp-server
+
       - name: Prepare site content
         run: |
           cp build/native/nativeCompile/gcp-auditmate-mcp-server site/
-          echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>GCP Auditmate MCP Server</title></head><body><h1>Download</h1><a href="gcp-auditmate-mcp-server">Download Executable</a></body></html>' > site/index.html
 
       - name: Upload static site as artifact
         uses: actions/upload-pages-artifact@v3
