@@ -27,8 +27,7 @@ jobs:
           components: 'native-image'
 
       - name: Build Native Executable
-        run: ./gradlew nativeCompile
+        run: ./gradlew nativeCompile -Porg.graalvm.buildtools.native.imagebuild.options="--initialize-at-build-time= --initialize-at-run-time=org.springframework.util.ClassUtils,org.apache.poi.ss.format.CellFormatPart,java.awt.Toolkit,org.springframework.util.ConcurrentReferenceHashMap -H:+ReportExceptionStackTraces"
         env:
           JAVA_TOOL_OPTIONS: "-Xmx12g -XX:MaxMetaspaceSize=1g"
-          NATIVE_IMAGE_ARGS: "--initialize-at-build-time= --initialize-at-run-time=org.springframework.util.ClassUtils,org.apache.poi.ss.format.CellFormatPart,java.awt.Toolkit,org.springframework.util.ConcurrentReferenceHashMap -H:+ReportExceptionStackTraces"
 
