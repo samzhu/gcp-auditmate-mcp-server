@@ -83,9 +83,9 @@ jobs:
           cd release
           zip -r gcp-auditmate-mcp-server-intel.zip gcp-auditmate-mcp-server-intel
 
-      # 創建 GitHub Release
+      # 使用 action-gh-release v2 創建 GitHub Release
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.RELEASE_TAG }}
           name: ${{ env.RELEASE_NAME }}
