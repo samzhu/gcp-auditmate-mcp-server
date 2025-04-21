@@ -1,5 +1,6 @@
 package io.github.samzhu.auditmate.tools;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -8,6 +9,7 @@ import java.io.StringWriter;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -156,6 +158,83 @@ public class GcpAuditTool {
             Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTFontFamily");
             Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.STFontFamily");
             Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.STFontFamilyImpl");
+            // 加載 STXstring 相關類，解決共享類型字符串問題
+            Class.forName("org.openxmlformats.schemas.officeDocument.x2006.sharedTypes.STXstring");
+            Class.forName("org.openxmlformats.schemas.officeDocument.x2006.sharedTypes.impl.STXstringImpl");
+            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.STCellType");
+            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.STCellTypeImpl");
+            // 加載單元格類型枚舉相關類，解決枚舉轉換問題
+            try {
+                Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.STCellType$Enum");
+                Class.forName("org.apache.xmlbeans.StringEnumAbstractBase");
+                Class.forName("org.apache.xmlbeans.StringEnumAbstractBase$Table");
+                Class.forName("org.apache.xmlbeans.impl.values.StringEnumValue");
+                Class.forName("org.apache.xmlbeans.impl.values.JavaStringEnumerationHolderEx");
+                // 加載其他常用枚舉類型
+                Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.STBorderStyle$Enum");
+                Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.STPatternType$Enum");
+                Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.STFontFamily$Enum");
+                Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.STVerticalAlignment$Enum");
+                Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.STHorizontalAlignment$Enum");
+                Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.STVerticalAlignment");
+                Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.STVerticalAlignmentImpl");
+                Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.STHorizontalAlignment");
+                Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.STHorizontalAlignmentImpl");
+            } catch (NoClassDefFoundError e) {
+                log.warn("無法找到枚舉相關類: {}", e.getMessage());
+            }
+            // 加載其他常用 Office XML 類，預防可能的錯誤
+            // DrawingML 相關類（圖表、圖形等）
+            Class.forName("org.openxmlformats.schemas.drawingml.x2006.main.CTTextParagraph");
+            Class.forName("org.openxmlformats.schemas.drawingml.x2006.main.impl.CTTextParagraphImpl");
+            Class.forName("org.openxmlformats.schemas.drawingml.x2006.main.CTTextBody");
+            Class.forName("org.openxmlformats.schemas.drawingml.x2006.main.impl.CTTextBodyImpl");
+            Class.forName("org.openxmlformats.schemas.drawingml.x2006.main.CTRegularTextRun");
+            Class.forName("org.openxmlformats.schemas.drawingml.x2006.main.impl.CTRegularTextRunImpl");
+            Class.forName("org.openxmlformats.schemas.drawingml.x2006.main.CTTextCharacterProperties");
+            Class.forName("org.openxmlformats.schemas.drawingml.x2006.main.impl.CTTextCharacterPropertiesImpl");
+            // 表格相關類
+            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTTable");
+            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTTableImpl");
+            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTTableColumns");
+            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTTableColumnsImpl");
+            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTTableColumn");
+            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTTableColumnImpl");
+            // 工作表相關類
+            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTHeaderFooter");
+            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTHeaderFooterImpl");
+            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTSheetView");
+            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTSheetViewImpl");
+            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTSheetViews");
+            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTSheetViewsImpl");
+            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTSheetFormatPr");
+            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTSheetFormatPrImpl");
+            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTSheetProtection");
+            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTSheetProtectionImpl");
+            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTPageMargins");
+            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTPageMarginsImpl");
+            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTPageSetup");
+            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTPageSetupImpl");
+            // 單元格相關類
+            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTCellAlignment");
+            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTCellAlignmentImpl");
+            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTMergeCell");
+            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTMergeCellImpl");
+            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTMergeCells");
+            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTMergeCellsImpl");
+            // 其他功能相關類
+            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTHyperlink");
+            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTHyperlinkImpl");
+            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTHyperlinks");
+            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTHyperlinksImpl");
+            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDataValidation");
+            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTDataValidationImpl");
+            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDataValidations");
+            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTDataValidationsImpl");
+            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDefinedName");
+            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTDefinedNameImpl");
+            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDefinedNames");
+            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTDefinedNamesImpl");
         } catch (ClassNotFoundException e) {
             log.warn("無法初始化 POI 相關類: {}", e.getMessage());
         }
@@ -204,31 +283,96 @@ public class GcpAuditTool {
                 // 進行防火牆規則查核
                 inventoryFirewallRules(workbook, projectId);
 
-                // 保存整合後的檔案
                 String fileName = String.format("雲端自行查核_%s%s_GCP_%s.xlsx", year, quarter, projectId);
-                File outputFile = new File(fileName);
-                try (FileOutputStream fileOut = new FileOutputStream(outputFile)) {
-                    workbook.write(fileOut);
+                String absoluteFilePath = "";
+                
+                try {
+                    // 首先嘗試使用使用者家目錄
+                    File homeDir = new File(System.getProperty("user.home"));
+                    File outputFile = new File(homeDir, fileName);
+                    log.info("準備將檔案寫入使用者家目錄: {}", outputFile.getAbsolutePath());
+                    
+                    // 檢查家目錄是否存在且可寫入
+                    if (!homeDir.exists()) {
+                        log.warn("家目錄不存在: {}", homeDir.getAbsolutePath());
+                        throw new IOException("家目錄不存在: " + homeDir.getAbsolutePath());
+                    }
+                    
+                    if (!homeDir.canWrite()) {
+                        log.warn("家目錄無寫入權限: {}", homeDir.getAbsolutePath());
+                        throw new IOException("家目錄無寫入權限: " + homeDir.getAbsolutePath());
+                    }
+                    
+                    try (FileOutputStream fileOut = new FileOutputStream(outputFile)) {
+                        workbook.write(fileOut);
+                        log.info("成功寫入檔案到家目錄: {}", outputFile.getAbsolutePath());
+                        absoluteFilePath = outputFile.getAbsolutePath();
+                    }
+                } catch (IOException e) {
+                    log.warn("無法寫入到家目錄，嘗試寫入臨時目錄: {}", e.getMessage());
+                    
+                    // 如果家目錄寫入失敗，嘗試使用系統臨時目錄
+                    try {
+                        File tempDir = new File(System.getProperty("java.io.tmpdir"));
+                        File outputFile = new File(tempDir, fileName);
+                        log.info("準備將檔案寫入臨時目錄: {}", outputFile.getAbsolutePath());
+                        
+                        // 檢查臨時目錄是否存在且可寫入
+                        if (!tempDir.exists()) {
+                            log.warn("臨時目錄不存在: {}", tempDir.getAbsolutePath());
+                            tempDir.mkdirs();
+                            log.info("嘗試創建臨時目錄: {}", tempDir.getAbsolutePath());
+                        }
+                        
+                        if (!tempDir.canWrite()) {
+                            log.error("臨時目錄無寫入權限: {}", tempDir.getAbsolutePath());
+                            throw new IOException("臨時目錄無寫入權限: " + tempDir.getAbsolutePath());
+                        }
+                        
+                        try (FileOutputStream fileOut = new FileOutputStream(outputFile)) {
+                            workbook.write(fileOut);
+                            log.info("成功寫入檔案到臨時目錄: {}", outputFile.getAbsolutePath());
+                            absoluteFilePath = outputFile.getAbsolutePath();
+                        }
+                    } catch (IOException tempDirException) {
+                        // 若無法寫入檔案系統，則嘗試創建內存中的檔案並轉為Base64編碼
+                        log.warn("無法寫入到臨時目錄，轉為創建內存中的檔案: {}", tempDirException.getMessage());
+                        
+                        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                        workbook.write(bos);
+                        byte[] bytes = bos.toByteArray();
+                        String base64Content = Base64.getEncoder().encodeToString(bytes);
+                        
+                        // 提供一個下載鏈接（這裡僅作為示範，實際應用可能需要實現檔案存儲服務）
+                        absoluteFilePath = "data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64," + base64Content;
+                        log.info("已生成Base64編碼的檔案，長度: {}", absoluteFilePath.length());
+                    }
                 }
-
-                // 獲取檔案的絕對路徑
-                String absoluteFilePath = outputFile.getAbsolutePath();
 
                 // 設置結果
                 result.setReportFilePath(absoluteFilePath);
                 result.setStatus("SUCCESS");
 
                 // 記錄檔案的絕對路徑
-                log.info("查核完成，資料已匯出至檔案: {}", absoluteFilePath);
+                log.info("查核完成，資料已處理: {}", absoluteFilePath.substring(0, Math.min(100, absoluteFilePath.length())) + (absoluteFilePath.length() > 100 ? "..." : ""));
             }
         } catch (IOException e) {
-            log.warn("無法取得 GCP 憑證: {}", e.getMessage());
-            result.setStatus("AUTH_REQUIRED");
-            result.setErrorMessage("請使用以下指令取得 GCP 授權:\n\n" +
-                    "gcloud auth application-default login\n\n" +
-                    "或使用無瀏覽器模式:\n\n" +
-                    "gcloud auth application-default login --no-browser\n\n" +
-                    "授權完成後，請重新執行查核。");
+            log.warn("無法取得 GCP 憑證或寫入檔案: {}", e.getMessage());
+            
+            // 檢查是否為文件無法寫入的問題
+            if (e instanceof java.io.FileNotFoundException) {
+                result.setStatus("FAILED");
+                result.setErrorMessage("無法寫入檔案: " + e.getMessage() + 
+                       "\n請確認應用程式有權限寫入文件，或是嘗試重新執行程式。");
+            } else {
+                result.setStatus("AUTH_REQUIRED");
+                result.setErrorMessage("請使用以下指令取得 GCP 授權:\n\n" +
+                        "gcloud auth application-default login\n\n" +
+                        "或使用無瀏覽器模式:\n\n" +
+                        "gcloud auth application-default login --no-browser\n\n" +
+                        "授權完成後，請重新執行查核。");
+            }
+            result.setStackTrace(getStackTraceAsString(e));
         } catch (Exception e) {
             log.error("GCP 查核失敗", e);
             result.setStatus("FAILED");
@@ -256,8 +400,9 @@ public class GcpAuditTool {
                         • 年度 / 季度：%s / %s
                         • 查核時間：%s
                         • 錯誤訊息：%s
+                        • 堆疊追蹤：%s
                         """, result.getProjectId(), result.getYear(), result.getQuarter(),
-                        result.getAuditTime(), result.getErrorMessage());
+                        result.getAuditTime(), result.getErrorMessage(), result.getStackTrace());
             }
         }
     }
@@ -279,6 +424,7 @@ public class GcpAuditTool {
             return credentials;
         } catch (IOException e) {
             log.error("無法取得 Google 應用程式默認憑證", e);
+            log.error("堆疊追蹤: {}", getStackTraceAsString(e));
             throw new IOException("需要 GCP 授權。請執行 'gcloud auth application-default login' 命令獲取憑證。");
         }
     }
@@ -304,6 +450,7 @@ public class GcpAuditTool {
                     .anyMatch(service -> service.getName().contains(KMS_SERVICE_NAME));
         } catch (Exception e) {
             log.error("檢查 KMS API 狀態時發生錯誤", e);
+            log.error("堆疊追蹤: {}", getStackTraceAsString(e));
             return false;
         }
     }
@@ -365,6 +512,8 @@ public class GcpAuditTool {
             row.createCell(3).setCellValue("無");
             row.createCell(4).setCellValue("無");
             log.error("無法取得防火牆規則資訊: {}", e.getMessage());
+            log.error("堆疊追蹤: {}", getStackTraceAsString(e));
+            throw new Exception("無法取得防火牆規則資訊: " + e.getMessage(), e);
         }
     }
 
@@ -440,6 +589,9 @@ public class GcpAuditTool {
                 row.createCell(1).setCellValue("無");
                 row.createCell(2).setCellValue("無");
                 row.createCell(3).setCellValue("無");
+                log.error("無法存取 Cloud KMS 服務: {}", e.getMessage());
+                log.error("堆疊追蹤: {}", getStackTraceAsString(e));
+                throw new IOException("無法存取 Cloud KMS 服務: " + e.getMessage(), e);
             }
         }
     }
@@ -495,6 +647,13 @@ public class GcpAuditTool {
                     }
                 }
             }
+        } catch (Exception e) {
+            XSSFRow row = sheet.createRow(1);
+            row.createCell(0).setCellValue("無法取得 IAM 權限資訊");
+            row.createCell(1).setCellValue("無");
+            log.error("無法取得 IAM 權限資訊: {}", e.getMessage());
+            log.error("堆疊追蹤: {}", getStackTraceAsString(e));
+            throw new IOException("無法取得 IAM 權限資訊: " + e.getMessage(), e);
         }
     }
 

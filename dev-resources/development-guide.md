@@ -52,5 +52,3 @@ dubug
 ``` bash
 lsof -i :8080
 ```
-
-esult.setStackTrace(getStackTraceAsString(e));

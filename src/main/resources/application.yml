@@ -3,7 +3,7 @@ spring:
     name: gcp-auditmate-mcp-server
   main:
     banner-mode: off
-
+    web-application-type: none
   ai:
     mcp:
       server:
