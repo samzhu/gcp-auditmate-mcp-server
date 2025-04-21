@@ -1,36 +1,60 @@
 name: Build Native, Publish Release & Pages
 
+
 on:
   push:
-    branches:
+    branches: # 當推送到 main 分支時自動觸發
       - main
+  workflow_dispatch:  # 允許從 GitHub 界面手動觸發
 
+
+# 設定必要的權限
 permissions:
-  contents: write
-  pages: write
-  id-token: write
+  contents: write  # 允許建立 release
+  pages: write     # 允許部署 GitHub Pages
+  id-token: write  # 用於 GitHub Pages 部署
+
 
 jobs:
-  build-and-release:
-    runs-on: macos-13
+  build-and-release: # 第一個任務: 構建原生執行檔
+    # 矩陣策略設置: 同時構建 Intel 和 ARM 版本
+    strategy:
+      matrix:
+        arch: [intel, arm]  # 定義兩種架構
+        include:
+          # Intel 設置
+          - arch: intel
+            runner: macos-13  # 使用 macOS 13 (Intel) 的運行環境
+            target_platform: darwin-x86_64  # GraalVM 目標平台
+            artifact_name: gcp-auditmate-mcp-server-intel  # 產物命名
+          # ARM 設置
+          - arch: arm
+            runner: macos-14  # 使用 macOS 14 (可運行 ARM 編譯) 的運行環境
+            target_platform: darwin-aarch64  # GraalVM 目標平台
+            artifact_name: gcp-auditmate-mcp-server-arm  # 產物命名
+
+    # 根據矩陣變量選擇對應的運行環境
+    runs-on: ${{ matrix.runner }}
 
     steps:
+      # 第1步: 檢出代碼庫s
       - name: Checkout
         uses: actions/checkout@v4
 
-      # STEP 2: Setup GraalVM
+      # 第2步: 設置 GraalVM 環境
       - name: Setup GraalVM with Java 21
         uses: graalvm/setup-graalvm@v1
         with:
           java-version: '21'
           distribution: 'graalvm'
 
-      # STEP 3: Create GraalVM configuration files in CI
+      # 第3步: 創建 GraalVM 配置文件
+      # 這些配置對於正確構建原生執行檔非常重要，特別是針對使用到 AWT/Java2D 等需要特殊處理的功能
       - name: Create GraalVM Configuration Files
         run: |
           mkdir -p src/main/resources/META-INF/native-image
           
-          # Create native-image.properties
+          # 創建 native-image.properties 配置文件
           cat > src/main/resources/META-INF/native-image/native-image.properties << EOF
           Args = -H:+UnlockExperimentalVMOptions \\
                  -H:+ReportExceptionStackTraces \\
@@ -56,56 +80,118 @@ jobs:
                  -Dorg.apache.poi.ss.format.disable.color=true
           EOF
 
-      # STEP 4: Clean project
-      - name: Clean Project
-        run: ./gradlew clean
-
-      # STEP 5: Build native executable
+      # 第4步: 構建原生執行檔
+      # 使用 GraalVM 的 native-image 工具將 Java 應用程序編譯為特定平台的原生執行檔
       - name: Build Native Executable
         run: ./gradlew nativeCompile -x test --info
         env:
-          JAVA_TOOL_OPTIONS: "-Xmx12g -XX:MaxMetaspaceSize=1g -Dnative-image.target-platform=darwin-x86_64"
+          # 設置 Java 工具選項，包括目標平台參數
+          JAVA_TOOL_OPTIONS: "-Xmx12g -XX:MaxMetaspaceSize=1g -Dnative-image.target-platform=${{ matrix.target_platform }}"
 
+      # 第5步: 確保執行檔有執行權限
       - name: Make MCP server executable
         run: chmod +x build/native/nativeCompile/gcp-auditmate-mcp-server
 
-      # 使用預設版本號碼
+      # 第6步: 設置版本號
       - name: Set version
         run: |
           echo "VERSION=20250421.1" >> $GITHUB_ENV
           echo "RELEASE_TAG=v20250421.1" >> $GITHUB_ENV
           echo "RELEASE_NAME=Release v20250421.1" >> $GITHUB_ENV
-
-      # 創建目錄並複製執行檔
+      
+      # 第7步: 準備發布文件
       - name: Prepare release files
         run: |
           mkdir -p release
-          cp build/native/nativeCompile/gcp-auditmate-mcp-server release/gcp-auditmate-mcp-server-intel
+          # 複製並重命名執行檔，根據架構命名
+          cp build/native/nativeCompile/gcp-auditmate-mcp-server release/${{ matrix.artifact_name }}
           cd release
-          zip -r gcp-auditmate-mcp-server-intel.zip gcp-auditmate-mcp-server-intel
+          # 創建包含執行檔的 zip 壓縮包
+          zip -r ${{ matrix.artifact_name }}.zip ${{ matrix.artifact_name }}
+      
+      # 第9步: 上傳構建產物
+      # 這些產物將在後續的 create-release 任務中使用
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: |
+            release/${{ matrix.artifact_name }}
+            release/${{ matrix.artifact_name }}.zip
 
-      # 使用 action-gh-release v2 創建 GitHub Release
+  # 第二個任務: 創建 GitHub Release
+  # 此任務依賴於 build-and-release 任務完成
+  create-release:
+    needs: build-and-release
+    runs-on: ubuntu-latest
+    steps:
+      # 第1步: 下載所有構建產物
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release
+      
+      # 第2步: 設置版本號
+      # 注意: 這裡重複設置版本號，以確保在這個任務中也能訪問版本信息
+      - name: Set version
+        run: |
+          echo "VERSION=20250421.1" >> $GITHUB_ENV
+          echo "RELEASE_TAG=v20250421.1" >> $GITHUB_ENV
+          echo "RELEASE_NAME=Release v20250421.1" >> $GITHUB_ENV
+      
+      # 第3步: 列出下載的文件，方便調試
+      - name: List downloaded files
+        run: find release -type f
+      
+      # 第4步: 重新組織文件結構，準備發布
+      - name: Reorganize files
+        run: |
+          mkdir -p combined_release
+          cp release/gcp-auditmate-mcp-server-intel/gcp-auditmate-mcp-server-intel combined_release/
+          cp release/gcp-auditmate-mcp-server-intel/gcp-auditmate-mcp-server-intel.zip combined_release/
+          cp release/gcp-auditmate-mcp-server-arm/gcp-auditmate-mcp-server-arm combined_release/
+          cp release/gcp-auditmate-mcp-server-arm/gcp-auditmate-mcp-server-arm.zip combined_release/
+      
+      # 第5步: 創建 GitHub Release
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.RELEASE_TAG }}
           name: ${{ env.RELEASE_NAME }}
           body: |
-            GCP Auditmate MCP Server for Intel Mac
+            GCP Auditmate MCP Server for Mac
+            
+            包含兩個版本:
+            - Intel Mac (x86_64)
+            - Apple Silicon Mac (ARM64)
             
             Built on: ${{ github.event.repository.updated_at }}
             Commit: ${{ github.sha }}
-          draft: false
-          prerelease: false
+          draft: false  # 設為 true 可以創建草稿 release
+          prerelease: false  # 設為 true 可以標記為預發布版本
           files: |
-            release/gcp-auditmate-mcp-server-intel.zip
-            release/gcp-auditmate-mcp-server-intel
+            combined_release/gcp-auditmate-mcp-server-intel
+            combined_release/gcp-auditmate-mcp-server-intel.zip
+            combined_release/gcp-auditmate-mcp-server-arm
+            combined_release/gcp-auditmate-mcp-server-arm.zip
 
+  # 第三個任務: 部署 GitHub Pages
+  # 此任務依賴於 build-and-release 任務完成
+  deploy-pages:
+    needs: build-and-release
+    runs-on: ubuntu-latest
+    steps:
+      # 第1步: 檢出代碼庫
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      # 第2步: 上傳靜態網站內容
       - name: Upload static site as artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: site
+          path: site  # 靜態網站內容所在的目錄
 
+      # 第3步: 部署到 GitHub Pages
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v4 
