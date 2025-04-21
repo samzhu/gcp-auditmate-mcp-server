@@ -2,12 +2,40 @@
 <html>
 
 <head>
-  <meta charset="UTF-8">
-  <title>GCP Auditmate MCP Server</title>
+  <title>GCP AuditMate MCP 伺服器</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #333;
+    }
+
+    .artifact {
+      margin-bottom: 20px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+  </style>
 </head>
 
 <body>
-  <h1>Download</h1><a href="gcp-auditmate-mcp-server">Download Executable</a>
+  <h1>GCP AuditMate MCP 伺服器</h1>
+  <p>可以從 GitHub Actions 工作流程中獲取原生二進制檔案：</p>
+  <div class="artifact">
+    <h2>Ubuntu 原生二進制檔案 (intel 晶片)</h2>
+    <p>下載 intel 晶片版本。<a href="https://blog.samzhu.dev/gcp-auditmate-mcp-server/gcp-auditmate-mcp-server-intel">下載連結</a></p>
+  </div>
+  <div class="artifact">
+    <h2>macOS 原生二進制檔案 (ARM 晶片)</h2>
+    <p>下載 macOS ARM 晶片版本：<a href="https://blog.samzhu.dev/gcp-auditmate-mcp-server/gcp-auditmate-mcp-server">下載連結</a></p>
+  </div>
+  <p>最後更新時間: $(date)</p>
 </body>
 
 </html>
