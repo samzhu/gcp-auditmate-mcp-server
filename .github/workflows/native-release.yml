@@ -26,12 +26,12 @@ jobs:
           - arch: intel
             runner: macos-13  # 使用 macOS 13 (Intel) 的運行環境
             target_platform: darwin-x86_64  # GraalVM 目標平台
-            artifact_name: gcp-auditmate-mcp-server-intel  # 產物命名
+            artifact_name: gcp-auditmate-mcp-server-darwin-x86_64  # 產物命名與 target_platform 一致
           # ARM 設置
           - arch: arm
             runner: macos-14  # 使用 macOS 14 (可運行 ARM 編譯) 的運行環境
             target_platform: darwin-aarch64  # GraalVM 目標平台
-            artifact_name: gcp-auditmate-mcp-server-arm  # 產物命名
+            artifact_name: gcp-auditmate-mcp-server-darwin-aarch64  # 產物命名與 target_platform 一致
 
     # 根據矩陣變量選擇對應的運行環境
     runs-on: ${{ matrix.runner }}
@@ -109,7 +109,7 @@ jobs:
           # 創建包含執行檔的 zip 壓縮包
           zip -r ${{ matrix.artifact_name }}.zip ${{ matrix.artifact_name }}
       
-      # 第9步: 上傳構建產物
+      # 第8步: 上傳構建產物
       # 這些產物將在後續的 create-release 任務中使用
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -138,6 +138,8 @@ jobs:
           echo "VERSION=20250421.1" >> $GITHUB_ENV
           echo "RELEASE_TAG=v20250421.1" >> $GITHUB_ENV
           echo "RELEASE_NAME=Release v20250421.1" >> $GITHUB_ENV
+          echo "INTEL_ARTIFACT=gcp-auditmate-mcp-server-darwin-x86_64" >> $GITHUB_ENV
+          echo "ARM_ARTIFACT=gcp-auditmate-mcp-server-darwin-aarch64" >> $GITHUB_ENV
       
       # 第3步: 列出下載的文件，方便調試
       - name: List downloaded files
@@ -147,10 +149,10 @@ jobs:
       - name: Reorganize files
         run: |
           mkdir -p combined_release
-          cp release/gcp-auditmate-mcp-server-intel/gcp-auditmate-mcp-server-intel combined_release/
-          cp release/gcp-auditmate-mcp-server-intel/gcp-auditmate-mcp-server-intel.zip combined_release/
-          cp release/gcp-auditmate-mcp-server-arm/gcp-auditmate-mcp-server-arm combined_release/
-          cp release/gcp-auditmate-mcp-server-arm/gcp-auditmate-mcp-server-arm.zip combined_release/
+          cp release/${{ env.INTEL_ARTIFACT }}/${{ env.INTEL_ARTIFACT }} combined_release/
+          cp release/${{ env.INTEL_ARTIFACT }}/${{ env.INTEL_ARTIFACT }}.zip combined_release/
+          cp release/${{ env.ARM_ARTIFACT }}/${{ env.ARM_ARTIFACT }} combined_release/
+          cp release/${{ env.ARM_ARTIFACT }}/${{ env.ARM_ARTIFACT }}.zip combined_release/
       
       # 第5步: 創建 GitHub Release
       - name: Create Release
@@ -162,18 +164,18 @@ jobs:
             GCP Auditmate MCP Server for Mac
             
             包含兩個版本:
-            - Intel Mac (x86_64)
-            - Apple Silicon Mac (ARM64)
+            - Intel Mac (x86_64): ${{ env.INTEL_ARTIFACT }}
+            - Apple Silicon Mac (ARM64): ${{ env.ARM_ARTIFACT }}
             
             Built on: ${{ github.event.repository.updated_at }}
             Commit: ${{ github.sha }}
           draft: false  # 設為 true 可以創建草稿 release
           prerelease: false  # 設為 true 可以標記為預發布版本
           files: |
-            combined_release/gcp-auditmate-mcp-server-intel
-            combined_release/gcp-auditmate-mcp-server-intel.zip
-            combined_release/gcp-auditmate-mcp-server-arm
-            combined_release/gcp-auditmate-mcp-server-arm.zip
+            combined_release/${{ env.INTEL_ARTIFACT }}
+            combined_release/${{ env.INTEL_ARTIFACT }}.zip
+            combined_release/${{ env.ARM_ARTIFACT }}
+            combined_release/${{ env.ARM_ARTIFACT }}.zip
 
   # 第三個任務: 部署 GitHub Pages
   # 此任務依賴於 build-and-release 任務完成
