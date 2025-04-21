@@ -31,7 +31,7 @@ jobs:
           mkdir -p src/main/resources/META-INF/native-image
           cat > src/main/resources/META-INF/native-image/native-image.properties << EOF
           Args = -H:+UnlockExperimentalVMOptions \
-                 --initialize-at-build-time= \
+                 -H:+AllowDeprecatedInitializeAllClassesAtBuildTime \
                  --initialize-at-run-time=org.springframework.util.ClassUtils,org.springframework.util.ConcurrentReferenceHashMap,org.apache.poi.ss.format.CellFormatPart,java.awt.Toolkit \
                  -H:+ReportExceptionStackTraces
           EOF
