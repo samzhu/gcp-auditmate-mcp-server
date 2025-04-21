@@ -63,7 +63,7 @@ jobs:
       - name: Build Native Executable
         run: ./gradlew nativeCompile -x test --info
         env:
-          JAVA_TOOL_OPTIONS: "-Xmx12g -XX:MaxMetaspaceSize=1g"
+          JAVA_TOOL_OPTIONS: "-Xmx12g -XX:MaxMetaspaceSize=1g -Dnative-image.target-platform=darwin-x86_64"
 
       - name: Make MCP server executable
         run: chmod +x build/native/nativeCompile/gcp-auditmate-mcp-server
