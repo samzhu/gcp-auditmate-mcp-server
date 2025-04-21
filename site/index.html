@@ -26,37 +26,58 @@
 
 <body>
   <h1>GCP AuditMate MCP 伺服器</h1>
-  <p>可以從 GitHub Actions 工作流程中獲取原生二進制檔案：</p>
+  <p>可以從 GitHub Releases 中獲取各平台的原生二進制檔案：</p>
+  
   <div class="artifact">
-    <h2>Ubuntu 原生二進制檔案 (intel 晶片)</h2>
-    <p>下載 intel 晶片版本。<a href="https://blog.samzhu.dev/gcp-auditmate-mcp-server/gcp-auditmate-mcp-server-intel">下載連結</a></p>
+    <h2>macOS 版本 (Intel 晶片)</h2>
+    <p>適用於 Intel 處理器的 Mac 電腦。</p>
+    <p>下載連結：<a href="https://github.com/github-samzhu/gcp-auditmate-mcp-server/releases/latest/download/gcp-auditmate-mcp-server-darwin-x86_64">直接下載</a> 或 
+    <a href="https://github.com/github-samzhu/gcp-auditmate-mcp-server/releases/latest/download/gcp-auditmate-mcp-server-darwin-x86_64.zip">ZIP 壓縮包</a></p>
   </div>
+  
   <div class="artifact">
-    <h2>macOS 原生二進制檔案 (ARM 晶片)</h2>
-    <p>下載 macOS ARM 晶片版本：<a href="https://blog.samzhu.dev/gcp-auditmate-mcp-server/gcp-auditmate-mcp-server-arm">下載連結</a></p>
+    <h2>macOS 版本 (Apple Silicon/ARM 晶片)</h2>
+    <p>適用於 M1、M2、M3 等 Apple Silicon 晶片的 Mac 電腦。</p>
+    <p>下載連結：<a href="https://github.com/github-samzhu/gcp-auditmate-mcp-server/releases/latest/download/gcp-auditmate-mcp-server-darwin-aarch64">直接下載</a> 或 
+    <a href="https://github.com/github-samzhu/gcp-auditmate-mcp-server/releases/latest/download/gcp-auditmate-mcp-server-darwin-aarch64.zip">ZIP 壓縮包</a></p>
   </div>
   
   <h2>使用說明</h2>
   <div class="artifact">
-    <h3>步驟 1: 下載執行檔</h3>
-    <p>下載適合您系統的執行檔到您習慣的目錄，例如 /Users/username</p>
+    <h3>步驟 1: 下載並解壓執行檔</h3>
+    <p>下載適合您 Mac 系統晶片類型的執行檔到您習慣的目錄，例如 /Users/username</p>
+    <p>如果您不確定您的 Mac 使用哪種晶片，請點擊左上角蘋果圖示 > 關於這台 Mac 查看處理器資訊。</p>
     
-    <h3>步驟 2: 登入 Google Cloud</h3>
-    <p>開啟終端機並執行以下命令：</p>
+    <h3>步驟 2: 設定執行權限</h3>
+    <p>開啟終端機並執行以下命令（路徑請替換為您的實際路徑）：</p>
+    <pre>chmod +x /Users/username/gcp-auditmate-mcp-server-darwin-x86_64</pre>
+    <p>或者對於 ARM 版本：</p>
+    <pre>chmod +x /Users/username/gcp-auditmate-mcp-server-darwin-aarch64</pre>
+    
+    <h3>步驟 3: 登入 Google Cloud</h3>
+    <p>在終端機執行以下命令：</p>
     <pre>gcloud auth application-default login</pre>
     
-    <h3>步驟 3: 設定 Claude Desktop</h3>
+    <h3>步驟 4: 設定 Claude Desktop</h3>
     <p>打開 Claude Desktop 設定檔。在 macOS 上路徑通常為：<code>/Users/username/Library/Application Support/Claude/claude_desktop_config.json</code></p>
     <p>新增以下設定，請將命令路徑替換為您實際的執行檔路徑：</p>
     <pre>{
     "mcpServers": {
         "gcp-auditmate-mcp-server": {
-            "command": "/Users/username/gcp-auditmate-mcp-server"
+            "command": "/Users/username/gcp-auditmate-mcp-server-darwin-x86_64"
+        }
+    }
+}</pre>
+    <p>或者對於 ARM 版本：</p>
+    <pre>{
+    "mcpServers": {
+        "gcp-auditmate-mcp-server": {
+            "command": "/Users/username/gcp-auditmate-mcp-server-darwin-aarch64"
         }
     }
 }</pre>
     
-    <h3>步驟 4: 使用 Claude Desktop</h3>
+    <h3>步驟 5: 使用 Claude Desktop</h3>
     <p>打開 Claude Desktop，您會看到 MCP tool 已載入。</p>
     <img src="https://i.imgur.com/pIV7xF4.jpeg" alt="Claude Desktop MCP工具載入圖示" style="max-width: 100%; margin: 10px 0;">
     
