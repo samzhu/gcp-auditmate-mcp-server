@@ -35,3 +35,6 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### GraalVM ###
+src/main/resources/META-INF/native-image/native-image.properties

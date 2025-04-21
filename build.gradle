@@ -71,28 +71,10 @@ graalvmNative {
 	binaries {
 		main {
 			jvmArgs = ['-Xmx12g', '-XX:MaxMetaspaceSize=1g']
-			buildArgs.add('--initialize-at-build-time=org.apache.poi,org.apache.commons,org.apache.logging,org.apache.xmlbeans')
-			buildArgs.add('--initialize-at-build-time=org.springframework.boot.logging.log4j2.SpringBootPropertySource')
-			buildArgs.add('--initialize-at-build-time=ch.qos.logback')
-			buildArgs.add('--initialize-at-build-time=org.slf4j')
-			buildArgs.add('--initialize-at-build-time=org.apache.logging.slf4j')
-			buildArgs.add('--initialize-at-build-time=org.openxmlformats')
-			buildArgs.add('--initialize-at-build-time=org.openxmlformats.schemas.officeDocument.x2006.customProperties.impl.PropertiesDocumentImpl')
-			buildArgs.add('--initialize-at-build-time=org.openxmlformats.schemas.officeDocument.x2006.extendedProperties.impl.PropertiesDocumentImpl')
-			buildArgs.add('--initialize-at-build-time=org.openxmlformats.schemas.spreadsheetml.x2006.main.CTWorkbook')
-			buildArgs.add('--initialize-at-build-time=org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTWorkbookImpl')
-			buildArgs.add('--initialize-at-build-time=org.openxmlformats.schemas.spreadsheetml.x2006.main.WorkbookDocument')
-			buildArgs.add('--initialize-at-build-time=org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.WorkbookDocumentImpl')
-			buildArgs.add('--initialize-at-build-time=org.openxmlformats.schemas.spreadsheetml.x2006.main.CTWorkbookPr')
-			buildArgs.add('--initialize-at-build-time=org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTWorkbookPrImpl')
-			buildArgs.add('--initialize-at-build-time=org.openxmlformats.schemas.spreadsheetml.x2006.main.CTBookViews')
-			buildArgs.add('--initialize-at-build-time=org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTBookViewsImpl')
-			buildArgs.add('--initialize-at-build-time=org.openxmlformats.schemas.spreadsheetml.x2006.main.CTBookView')
-			buildArgs.add('--initialize-at-build-time=org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTBookViewImpl')
-			buildArgs.add('--initialize-at-build-time=java.awt.Color')
-			buildArgs.add('--initialize-at-build-time=org.apache.poi.hssf.util.HSSFColor')
-			buildArgs.add('--initialize-at-build-time=java.beans.PropertyChangeSupport')
-			buildArgs.add('--initialize-at-build-time=java.beans.PropertyChangeSupport$PropertyChangeListenerMap')
+			
+			// 明確指定不應該在構建時初始化的類
+			buildArgs.add('--initialize-at-run-time=java.awt.Toolkit')
+			buildArgs.add('--initialize-at-run-time=org.apache.poi.ss.format.CellFormatPart')
 			buildArgs.add('--initialize-at-run-time=java.awt')
 			buildArgs.add('--initialize-at-run-time=sun.awt')
 			buildArgs.add('--initialize-at-run-time=sun.font')
@@ -103,13 +85,20 @@ graalvmNative {
 			buildArgs.add('--initialize-at-run-time=org.apache.poi.hpsf.PropertySet')
 			buildArgs.add('--initialize-at-run-time=org.apache.poi.util.ChainedProperties')
 			buildArgs.add('--initialize-at-run-time=org.apache.poi.ss.util.SheetUtil')
-			buildArgs.add('--initialize-at-run-time=org.apache.poi.ss.format.CellFormatPart')
-			buildArgs.add('-H:+ReportExceptionStackTraces')
+			
+			// 追蹤類初始化，有助於調試
+			buildArgs.add('--trace-class-initialization=java.awt.Toolkit,org.apache.poi.ss.format.CellFormatPart')
+			
+			// 配置文件
 			buildArgs.add('-H:ReflectionConfigurationResources=META-INF/native-image/reflect-config.json')
 			buildArgs.add('-H:ResourceConfigurationResources=META-INF/native-image/resource-config.json')
-			buildArgs.add('-H:TraceClassInitialization=org.apache.poi')
+			
+			// 實驗性選項和特性
+			buildArgs.add('-H:+ReportExceptionStackTraces')
 			buildArgs.add('-H:+UnlockExperimentalVMOptions')
 			buildArgs.add('-H:EnableURLProtocols=http,https')
+			
+			// 系統屬性設置
 			buildArgs.add('-Djava.awt.headless=true')
 			buildArgs.add('-Dapple.awt.headless=true')
 			buildArgs.add('-Dorg.apache.poi.ss.disableAutoColumnWidth=true')

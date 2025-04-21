@@ -25,7 +25,7 @@ jobs:
           java-version: '21'
           distribution: 'graalvm'
 
-      # STEP 3: Create GraalVM configuration files
+      # STEP 3: Create GraalVM configuration files in CI
       - name: Create GraalVM Configuration Files
         run: |
           mkdir -p src/main/resources/META-INF/native-image
@@ -35,7 +35,19 @@ jobs:
           Args = -H:+UnlockExperimentalVMOptions \\
                  -H:+ReportExceptionStackTraces \\
                  -H:+AllowDeprecatedInitializeAllClassesAtBuildTime \\
-                 --initialize-at-run-time=org.springframework.util.ClassUtils,org.springframework.util.ConcurrentReferenceHashMap,org.apache.poi.ss.format.CellFormatPart,java.awt.Toolkit \\
+                 --initialize-at-run-time=java.awt.Toolkit \\
+                 --initialize-at-run-time=org.apache.poi.ss.format.CellFormatPart \\
+                 --initialize-at-run-time=java.awt \\
+                 --initialize-at-run-time=sun.awt \\
+                 --initialize-at-run-time=sun.font \\
+                 --initialize-at-run-time=sun.java2d \\
+                 --initialize-at-run-time=sun.font.FontDesignMetrics \\
+                 --initialize-at-run-time=java.awt.image,java.lang.Math.PowCache \\
+                 --initialize-at-run-time=org.apache.poi.util.RandomSingleton \\
+                 --initialize-at-run-time=org.apache.poi.hpsf.PropertySet \\
+                 --initialize-at-run-time=org.apache.poi.util.ChainedProperties \\
+                 --initialize-at-run-time=org.apache.poi.ss.util.SheetUtil \\
+                 --trace-class-initialization=java.awt.Toolkit,org.apache.poi.ss.format.CellFormatPart \\
                  -H:EnableURLProtocols=http,https \\
                  -Djava.awt.headless=true \\
                  -Dapple.awt.headless=true \\
@@ -47,15 +59,9 @@ jobs:
       - name: Clean Project
         run: ./gradlew clean
 
-      # STEP 5: Build native executable using Spring Boot plugin
+      # STEP 5: Build native executable
       - name: Build Native Executable
-        run: ./gradlew bootBuildImage -x test
-        env:
-          JAVA_TOOL_OPTIONS: "-Xmx12g -XX:MaxMetaspaceSize=1g"
-
-      # STEP 6: Build native executable using GraalVM directly
-      - name: Build Native Executable with GraalVM
-        run: ./gradlew nativeCompile -x test
+        run: ./gradlew nativeCompile -x test --info
         env:
           JAVA_TOOL_OPTIONS: "-Xmx12g -XX:MaxMetaspaceSize=1g"
 
