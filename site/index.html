@@ -33,9 +33,39 @@
   </div>
   <div class="artifact">
     <h2>macOS 原生二進制檔案 (ARM 晶片)</h2>
-    <p>下載 macOS ARM 晶片版本：<a href="https://blog.samzhu.dev/gcp-auditmate-mcp-server/gcp-auditmate-mcp-server">下載連結</a></p>
+    <p>下載 macOS ARM 晶片版本：<a href="https://blog.samzhu.dev/gcp-auditmate-mcp-server/gcp-auditmate-mcp-server-arm">下載連結</a></p>
   </div>
-  <p>最後更新時間: $(date)</p>
+  
+  <h2>使用說明</h2>
+  <div class="artifact">
+    <h3>步驟 1: 下載執行檔</h3>
+    <p>下載適合您系統的執行檔到您習慣的目錄，例如 /Users/username</p>
+    
+    <h3>步驟 2: 登入 Google Cloud</h3>
+    <p>開啟終端機並執行以下命令：</p>
+    <pre>gcloud auth application-default login</pre>
+    
+    <h3>步驟 3: 設定 Claude Desktop</h3>
+    <p>打開 Claude Desktop 設定檔。在 macOS 上路徑通常為：<code>/Users/username/Library/Application Support/Claude/claude_desktop_config.json</code></p>
+    <p>新增以下設定，請將命令路徑替換為您實際的執行檔路徑：</p>
+    <pre>{
+    "mcpServers": {
+        "gcp-auditmate-mcp-server": {
+            "command": "/Users/username/gcp-auditmate-mcp-server"
+        }
+    }
+}</pre>
+    
+    <h3>步驟 4: 使用 Claude Desktop</h3>
+    <p>打開 Claude Desktop，您會看到 MCP tool 已載入。</p>
+    <img src="https://i.imgur.com/pIV7xF4.jpeg" alt="Claude Desktop MCP工具載入圖示" style="max-width: 100%; margin: 10px 0;">
+    
+    <p>點擊 MCP tool，您將看到 gcp-auditmate-mcp-server 的功能資訊。</p>
+    <img src="https://i.imgur.com/yPnYCzv.jpeg" alt="gcp-auditmate-mcp-server功能資訊" style="max-width: 100%; margin: 10px 0;">
+    
+    <p>接著請他幫您進行 GCP 資源的自我查核。</p>
+    <img src="https://i.imgur.com/4mveLyz.jpeg" alt="GCP資源自我查核示例" style="max-width: 100%; margin: 10px 0;">
+  </div>
 </body>
 
 </html>

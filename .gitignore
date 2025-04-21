@@ -38,3 +38,4 @@ out/
 
 ### GraalVM ###
 src/main/resources/META-INF/native-image/native-image.properties
+.DS_Store
