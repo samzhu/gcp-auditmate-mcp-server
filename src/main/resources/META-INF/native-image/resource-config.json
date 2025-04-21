@@ -36,7 +36,7 @@
       },
       {
         "pattern": "\\Qorg/apache/poi/ss/usermodel/DataFormatter.class\\E"
-      }
+      },
       {
         "pattern": "\\QMETA-INF/services/org.apache.poi.ss.formula.udf.UDFFinder\\E"
       }
