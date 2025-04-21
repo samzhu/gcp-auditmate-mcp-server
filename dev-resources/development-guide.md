@@ -34,6 +34,7 @@ native-image --version
 ./build-native.sh
 ```
 
+build/native/nativeCompile/gcp-auditmate-mcp-server
 
 /Users/samzhu/workspace/github-samzhu/gcp-auditmate-mcp-server/build/native/nativeCompile/gcp-auditmate-mcp-server
 

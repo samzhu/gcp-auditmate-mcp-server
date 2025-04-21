@@ -25,20 +25,37 @@ jobs:
           java-version: '21'
           distribution: 'graalvm'
 
-      # STEP 3: Create GraalVM configuration file
-      - name: Create GraalVM Configuration
+      # STEP 3: Create GraalVM configuration files
+      - name: Create GraalVM Configuration Files
         run: |
           mkdir -p src/main/resources/META-INF/native-image
+          
+          # Create native-image.properties
           cat > src/main/resources/META-INF/native-image/native-image.properties << EOF
-          Args = -H:+UnlockExperimentalVMOptions \
-                 -H:+AllowDeprecatedInitializeAllClassesAtBuildTime \
-                 --initialize-at-run-time=org.springframework.util.ClassUtils,org.springframework.util.ConcurrentReferenceHashMap,org.apache.poi.ss.format.CellFormatPart,java.awt.Toolkit \
-                 -H:+ReportExceptionStackTraces
+          Args = -H:+UnlockExperimentalVMOptions \\
+                 -H:+ReportExceptionStackTraces \\
+                 -H:+AllowDeprecatedInitializeAllClassesAtBuildTime \\
+                 --initialize-at-run-time=org.springframework.util.ClassUtils,org.springframework.util.ConcurrentReferenceHashMap,org.apache.poi.ss.format.CellFormatPart,java.awt.Toolkit \\
+                 -H:EnableURLProtocols=http,https \\
+                 -Djava.awt.headless=true \\
+                 -Dapple.awt.headless=true \\
+                 -Dorg.apache.poi.ss.disableAutoColumnWidth=true \\
+                 -Dorg.apache.poi.ss.format.disable.color=true
           EOF
 
-      # STEP 4: Build native executable
+      # STEP 4: Clean project
+      - name: Clean Project
+        run: ./gradlew clean
+
+      # STEP 5: Build native executable using Spring Boot plugin
       - name: Build Native Executable
-        run: ./gradlew nativeCompile
+        run: ./gradlew bootBuildImage -x test
+        env:
+          JAVA_TOOL_OPTIONS: "-Xmx12g -XX:MaxMetaspaceSize=1g"
+
+      # STEP 6: Build native executable using GraalVM directly
+      - name: Build Native Executable with GraalVM
+        run: ./gradlew nativeCompile -x test
         env:
           JAVA_TOOL_OPTIONS: "-Xmx12g -XX:MaxMetaspaceSize=1g"
 
