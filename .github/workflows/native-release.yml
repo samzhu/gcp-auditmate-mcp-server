@@ -12,7 +12,11 @@ permissions:
 
 jobs:
   build-and-release:
-    runs-on: ubuntu-latest
+    # 使用 matrix 同時跑 ubuntu 與 macOS
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
 
     steps:
       - name: Checkout
@@ -67,10 +71,12 @@ jobs:
 
       - name: Make MCP server executable
         run: chmod +x build/native/nativeCompile/gcp-auditmate-mcp-server
-
-      - name: Prepare site content
-        run: |
-          cp build/native/nativeCompile/gcp-auditmate-mcp-server site/
+      
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: gcp-auditmate-mcp-server-${{ matrix.os }}
+          path: build/native/nativeCompile/gcp-auditmate-mcp-server
 
       - name: Upload static site as artifact
         uses: actions/upload-pages-artifact@v3
