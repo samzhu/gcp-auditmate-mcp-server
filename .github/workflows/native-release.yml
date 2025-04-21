@@ -18,16 +18,27 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # STEP 2: Native build
+      # STEP 2: Setup GraalVM
       - name: Setup GraalVM with Java 21
         uses: graalvm/setup-graalvm@v1
         with:
           java-version: '21'
           distribution: 'graalvm'
 
-      - name: Build Native Executable
+      # STEP 3: Create GraalVM configuration file
+      - name: Create GraalVM Configuration
         run: |
-          ./gradlew -Porg.springframework.boot.buildtools.native.opts="-H:+UnlockExperimentalVMOptions --initialize-at-build-time= --initialize-at-run-time=org.springframework.util.ClassUtils,org.apache.poi.ss.format.CellFormatPart,java.awt.Toolkit,org.springframework.util.ConcurrentReferenceHashMap -H:+ReportExceptionStackTraces" nativeCompile
+          mkdir -p src/main/resources/META-INF/native-image
+          cat > src/main/resources/META-INF/native-image/native-image.properties << EOF
+          Args = -H:+UnlockExperimentalVMOptions \
+                 --initialize-at-build-time= \
+                 --initialize-at-run-time=org.springframework.util.ClassUtils,org.springframework.util.ConcurrentReferenceHashMap,org.apache.poi.ss.format.CellFormatPart,java.awt.Toolkit \
+                 -H:+ReportExceptionStackTraces
+          EOF
+
+      # STEP 4: Build native executable
+      - name: Build Native Executable
+        run: ./gradlew nativeCompile
         env:
           JAVA_TOOL_OPTIONS: "-Xmx12g -XX:MaxMetaspaceSize=1g"
 
