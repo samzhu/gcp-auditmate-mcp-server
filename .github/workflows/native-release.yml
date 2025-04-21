@@ -67,10 +67,38 @@ jobs:
 
       - name: Make MCP server executable
         run: chmod +x build/native/nativeCompile/gcp-auditmate-mcp-server
-      
-      - name: Copy executable to site directory
+
+      # 使用預設版本號碼
+      - name: Set version
         run: |
-          cp build/native/nativeCompile/gcp-auditmate-mcp-server site/gcp-auditmate-mcp-server-intel
+          echo "VERSION=20250421.1" >> $GITHUB_ENV
+          echo "RELEASE_TAG=v20250421.1" >> $GITHUB_ENV
+          echo "RELEASE_NAME=Release v20250421.1" >> $GITHUB_ENV
+
+      # 創建目錄並複製執行檔
+      - name: Prepare release files
+        run: |
+          mkdir -p release
+          cp build/native/nativeCompile/gcp-auditmate-mcp-server release/gcp-auditmate-mcp-server-intel
+          cd release
+          zip -r gcp-auditmate-mcp-server-intel.zip gcp-auditmate-mcp-server-intel
+
+      # 創建 GitHub Release
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          name: ${{ env.RELEASE_NAME }}
+          body: |
+            GCP Auditmate MCP Server for Intel Mac
+            
+            Built on: ${{ github.event.repository.updated_at }}
+            Commit: ${{ github.sha }}
+          draft: false
+          prerelease: false
+          files: |
+            release/gcp-auditmate-mcp-server-intel.zip
+            release/gcp-auditmate-mcp-server-intel
 
       - name: Upload static site as artifact
         uses: actions/upload-pages-artifact@v3
