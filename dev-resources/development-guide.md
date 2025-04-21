@@ -97,3 +97,8 @@ https://i.imgur.com/4mveLyz.jpeg
 這樣就可以完成了
 
 
+
+file gcp-auditmate-mcp-server-intel
+chmod +x gcp-auditmate-mcp-server-intel
+xattr -cr gcp-auditmate-mcp-server-intel
+
