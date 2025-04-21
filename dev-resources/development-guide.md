@@ -54,6 +54,13 @@ dubug
 lsof -i :8080
 ```
 
+
+
+請先進行登入
+``` bash
+gcloud auth application-default login
+```
+
 下載執行檔 到你習慣的目錄 例如 /Users/samzhu
 
 ```
@@ -74,5 +81,19 @@ https://blog.samzhu.dev/gcp-auditmate-mcp-server/gcp-auditmate-mcp-server
 }
 ```
 
-接著打開 Claude desktop, 你會看到 gcp-auditmate-mcp-server 已經在 mcpServers 設定中, 查看會像這樣
+接著打開 Claude desktop, 你會看到有 MPC tool 已經載入了, 如下圖
+
+https://i.imgur.com/pIV7xF4.jpeg
+
+
+接著點開 MPC tool, 你會看到 gcp-auditmate-mcp-server 的功能資訊, 如下圖
+
+https://i.imgur.com/yPnYCzv.jpeg
+
+接著請他幫你進行自我查核, 如下圖
+
+https://i.imgur.com/4mveLyz.jpeg
+
+這樣就可以完成了
+
 

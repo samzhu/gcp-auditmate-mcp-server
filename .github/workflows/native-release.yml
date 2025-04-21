@@ -68,11 +68,9 @@ jobs:
       - name: Make MCP server executable
         run: chmod +x build/native/nativeCompile/gcp-auditmate-mcp-server
       
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: gcp-auditmate-mcp-server-intel
-          path: build/native/nativeCompile/gcp-auditmate-mcp-server
+      - name: Copy executable to site directory
+        run: |
+          cp build/native/nativeCompile/gcp-auditmate-mcp-server site/gcp-auditmate-mcp-server-intel
 
       - name: Upload static site as artifact
         uses: actions/upload-pages-artifact@v3
