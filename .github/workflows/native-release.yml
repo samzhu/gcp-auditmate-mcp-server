@@ -35,7 +35,7 @@ jobs:
             target_platform: darwin-aarch64  # GraalVM 目標平台
             artifact_name: gcp-auditmate-mcp-server-darwin-aarch64  # 產物命名與 target_platform 一致
             memory_options: "-Xmx5g -XX:MaxMetaspaceSize=512m"
-            build_options: "-H:+PrintAnalysisCallTree -H:+PrintImageHeapPartitionSizes --no-fallback"
+            build_options: ""
 
     # 根據矩陣變量選擇對應的運行環境
     runs-on: ${{ matrix.runner }}
@@ -97,6 +97,8 @@ jobs:
                  --trace-class-initialization=java.awt.Toolkit,org.apache.poi.ss.format.CellFormatPart \\
                  -H:EnableURLProtocols=http,https \\
                  -H:+AddAllCharsets \\
+                 -H:+PrintAnalysisCallTree \\
+                 --no-fallback \\
                  -Djava.awt.headless=true \\
                  -Dapple.awt.headless=true \\
                  -Dorg.apache.poi.ss.disableAutoColumnWidth=true \\
