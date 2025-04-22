@@ -241,10 +241,11 @@ public class GcpAuditTool {
     }
 
     private static final String KMS_SERVICE_NAME = "cloudkms.googleapis.com";
-
-    // Google API 需要的權限範圍
     private static final List<String> REQUIRED_SCOPES = Arrays.asList(
             "https://www.googleapis.com/auth/cloud-platform");
+    private static final String AUTH_REQUIRED_STATUS = "AUTH_REQUIRED";
+    private static final String FAILED_STATUS = "FAILED";
+    private static final String SUCCESS_STATUS = "SUCCESS";
 
     /**
      * 執行 GCP 查核
@@ -252,7 +253,7 @@ public class GcpAuditTool {
      * @param projectId GCP 專案 ID
      * @param year      年份
      * @param quarter   季度（H1 或 H2）
-     * @return 查核結果，包含報告檔案路徑
+     * @return 查核結果訊息
      */
     @Tool(name = "performAudit", description = "執行 GCP 自我查核並生成報告，檢查 IAM 權限、自攜金鑰(BYOK)和防火牆規則")
     public String performAudit(
@@ -260,172 +261,202 @@ public class GcpAuditTool {
             @ToolParam(required = true, description = "查核年份，例如 2025") String year,
             @ToolParam(required = true, description = "查核季度，H1 表示上半年，H2 表示下半年") String quarter) {
 
-        log.info("開始執行 GCP 查核，專案ID: {}, 年份: {}, 季度: {}", projectId, year, quarter);
+        GcpAuditResult result = initializeAuditResult(projectId, year, quarter);
+        String responseMessage = "";
 
+        try {
+            GoogleCredentials credentials = getCredentials();
+            executeAudit(result, projectId, year, quarter, credentials);
+        } catch (IOException e) {
+            handleIoException(result, e);
+        } catch (Exception e) {
+            handleGenericException(result, e);
+        } finally {
+            // 確保在 finally 區塊中回傳結果
+            responseMessage = formatAuditResultMessage(result);
+        }
+
+        return responseMessage;
+    }
+
+    /**
+     * 初始化查核結果物件
+     */
+    private GcpAuditResult initializeAuditResult(String projectId, String year, String quarter) {
         GcpAuditResult result = new GcpAuditResult();
         result.setProjectId(projectId);
         result.setYear(year);
         result.setQuarter(quarter);
         result.setAuditTime(LocalDateTime.now());
+        return result;
+    }
 
-        try {
-            // 嘗試取得 GCP 憑證
-            GoogleCredentials credentials = getCredentials();
-            log.info("成功取得 GCP 憑證");
+    /**
+     * 執行查核並生成報告
+     */
+    private void executeAudit(GcpAuditResult result, String projectId, String year, String quarter, GoogleCredentials credentials) throws Exception {
+        try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+            // 進行 IAM 查核
+            showIAM(workbook, projectId);
 
-            try (XSSFWorkbook workbook = new XSSFWorkbook()) {
-                // 進行 IAM 查核
-                showIAM(workbook, projectId);
+            // 進行 BYOK 查核
+            showBYOK(workbook, projectId);
 
-                // 進行 BYOK 查核
-                showBYOK(workbook, projectId);
+            // 進行防火牆規則查核
+            inventoryFirewallRules(workbook, projectId);
 
-                // 進行防火牆規則查核
-                inventoryFirewallRules(workbook, projectId);
-
-                String fileName = String.format("雲端自行查核_%s%s_GCP_%s.xlsx", year, quarter, projectId);
-                String absoluteFilePath = "";
-                
-                try {
-                    // 首先嘗試使用使用者家目錄
-                    File homeDir = new File(System.getProperty("user.home"));
-                    File outputFile = new File(homeDir, fileName);
-                    log.info("準備將檔案寫入使用者家目錄: {}", outputFile.getAbsolutePath());
-                    
-                    // 檢查家目錄是否存在且可寫入
-                    if (!homeDir.exists()) {
-                        log.warn("家目錄不存在: {}", homeDir.getAbsolutePath());
-                        throw new IOException("家目錄不存在: " + homeDir.getAbsolutePath());
-                    }
-                    
-                    if (!homeDir.canWrite()) {
-                        log.warn("家目錄無寫入權限: {}", homeDir.getAbsolutePath());
-                        throw new IOException("家目錄無寫入權限: " + homeDir.getAbsolutePath());
-                    }
-                    
-                    try (FileOutputStream fileOut = new FileOutputStream(outputFile)) {
-                        workbook.write(fileOut);
-                        log.info("成功寫入檔案到家目錄: {}", outputFile.getAbsolutePath());
-                        absoluteFilePath = outputFile.getAbsolutePath();
-                    }
-                } catch (IOException e) {
-                    log.warn("無法寫入到家目錄，嘗試寫入臨時目錄: {}", e.getMessage());
-                    
-                    // 如果家目錄寫入失敗，嘗試使用系統臨時目錄
-                    try {
-                        File tempDir = new File(System.getProperty("java.io.tmpdir"));
-                        File outputFile = new File(tempDir, fileName);
-                        log.info("準備將檔案寫入臨時目錄: {}", outputFile.getAbsolutePath());
-                        
-                        // 檢查臨時目錄是否存在且可寫入
-                        if (!tempDir.exists()) {
-                            log.warn("臨時目錄不存在: {}", tempDir.getAbsolutePath());
-                            tempDir.mkdirs();
-                            log.info("嘗試創建臨時目錄: {}", tempDir.getAbsolutePath());
-                        }
-                        
-                        if (!tempDir.canWrite()) {
-                            log.error("臨時目錄無寫入權限: {}", tempDir.getAbsolutePath());
-                            throw new IOException("臨時目錄無寫入權限: " + tempDir.getAbsolutePath());
-                        }
-                        
-                        try (FileOutputStream fileOut = new FileOutputStream(outputFile)) {
-                            workbook.write(fileOut);
-                            log.info("成功寫入檔案到臨時目錄: {}", outputFile.getAbsolutePath());
-                            absoluteFilePath = outputFile.getAbsolutePath();
-                        }
-                    } catch (IOException tempDirException) {
-                        // 若無法寫入檔案系統，則嘗試創建內存中的檔案並轉為Base64編碼
-                        log.warn("無法寫入到臨時目錄，轉為創建內存中的檔案: {}", tempDirException.getMessage());
-                        
-                        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                        workbook.write(bos);
-                        byte[] bytes = bos.toByteArray();
-                        String base64Content = Base64.getEncoder().encodeToString(bytes);
-                        
-                        // 提供一個下載鏈接（這裡僅作為示範，實際應用可能需要實現檔案存儲服務）
-                        absoluteFilePath = "data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64," + base64Content;
-                        log.info("已生成Base64編碼的檔案，長度: {}", absoluteFilePath.length());
-                    }
-                }
-
-                // 設置結果
-                result.setReportFilePath(absoluteFilePath);
-                result.setStatus("SUCCESS");
-
-                // 記錄檔案的絕對路徑
-                log.info("查核完成，資料已處理: {}", absoluteFilePath.substring(0, Math.min(100, absoluteFilePath.length())) + (absoluteFilePath.length() > 100 ? "..." : ""));
-            }
-        } catch (IOException e) {
-            log.warn("無法取得 GCP 憑證或寫入檔案: {}", e.getMessage());
+            // 生成報表檔案名稱和保存報表
+            String fileName = String.format("雲端自行查核_%s%s_GCP_%s.xlsx", year, quarter, projectId);
+            String filePath = saveWorkbookToFile(workbook, fileName);
             
-            // 檢查是否為文件無法寫入的問題
-            if (e instanceof java.io.FileNotFoundException) {
-                result.setStatus("FAILED");
-                result.setErrorMessage("無法寫入檔案: " + e.getMessage() + 
-                       "\n請確認應用程式有權限寫入文件，或是嘗試重新執行程式。");
-            } else {
-                result.setStatus("AUTH_REQUIRED");
-                result.setErrorMessage("請使用以下指令取得 GCP 授權:\n\n" +
-                        "gcloud auth application-default login\n\n" +
-                        "或使用無瀏覽器模式:\n\n" +
-                        "gcloud auth application-default login --no-browser\n\n" +
-                        "授權完成後，請重新執行查核。");
-            }
-            result.setStackTrace(getStackTraceAsString(e));
-        } catch (Exception e) {
-            log.error("GCP 查核失敗", e);
-            result.setStatus("FAILED");
-            result.setErrorMessage(e.getMessage());
-            result.setStackTrace(getStackTraceAsString(e));
-        } finally {
-            // 在 finally 區塊中回傳結果
-            if ("SUCCESS".equals(result.getStatus())) {
-                return String.format("""
-                        ✅ GCP 查核成功！
+            result.setReportFilePath(filePath);
+            result.setStatus(SUCCESS_STATUS);
+        }
+    }
 
-                        • 專案 ID：%s
-                        • 年度 / 季度：%s / %s
-                        • 查核時間：%s
-                        • 報告位置：%s
-
-                        若需開啟報告，請手動點開上方 Excel 檔案
-                        """, result.getProjectId(), result.getYear(), result.getQuarter(),
-                        result.getAuditTime(), result.getReportFilePath());
-            } else {
-                return String.format("""
-                        ❌ GCP 查核失敗！
-
-                        • 專案 ID：%s
-                        • 年度 / 季度：%s / %s
-                        • 查核時間：%s
-                        • 錯誤訊息：%s
-                        • 堆疊追蹤：%s
-                        """, result.getProjectId(), result.getYear(), result.getQuarter(),
-                        result.getAuditTime(), result.getErrorMessage(), result.getStackTrace());
+    /**
+     * 儲存 Excel 工作簿到檔案系統
+     */
+    private String saveWorkbookToFile(XSSFWorkbook workbook, String fileName) throws IOException {
+        // 嘗試寫入到家目錄
+        try {
+            File homeDir = new File(System.getProperty("user.home"));
+            validateDirectory(homeDir);
+            
+            File outputFile = new File(homeDir, fileName);
+            writeWorkbookToFile(workbook, outputFile);
+            return outputFile.getAbsolutePath();
+        } catch (IOException homeException) {
+            // 家目錄寫入失敗，嘗試寫入到臨時目錄
+            try {
+                File tempDir = new File(System.getProperty("java.io.tmpdir"));
+                ensureDirectoryExists(tempDir);
+                validateDirectory(tempDir);
+                
+                File outputFile = new File(tempDir, fileName);
+                writeWorkbookToFile(workbook, outputFile);
+                return outputFile.getAbsolutePath();
+            } catch (IOException tempException) {
+                // 如果檔案系統寫入都失敗，則返回 Base64 編碼字串
+                return createBase64EncodedFile(workbook);
             }
         }
     }
 
     /**
+     * 校驗目錄是否存在且可寫入
+     */
+    private void validateDirectory(File directory) throws IOException {
+        if (!directory.exists()) {
+            throw new IOException("目錄不存在: " + directory.getAbsolutePath());
+        }
+        
+        if (!directory.canWrite()) {
+            throw new IOException("目錄無寫入權限: " + directory.getAbsolutePath());
+        }
+    }
+
+    /**
+     * 確保目錄存在，若不存在則創建
+     */
+    private void ensureDirectoryExists(File directory) {
+        if (!directory.exists()) {
+            directory.mkdirs();
+        }
+    }
+
+    /**
+     * 將工作簿寫入檔案
+     */
+    private void writeWorkbookToFile(XSSFWorkbook workbook, File outputFile) throws IOException {
+        try (FileOutputStream fileOut = new FileOutputStream(outputFile)) {
+            workbook.write(fileOut);
+        }
+    }
+
+    /**
+     * 創建 Base64 編碼的檔案內容
+     */
+    private String createBase64EncodedFile(XSSFWorkbook workbook) throws IOException {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        workbook.write(bos);
+        byte[] bytes = bos.toByteArray();
+        String base64Content = Base64.getEncoder().encodeToString(bytes);
+        return "data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64," + base64Content;
+    }
+
+    /**
+     * 處理 IO 異常
+     */
+    private void handleIoException(GcpAuditResult result, IOException e) {
+        if (e instanceof java.io.FileNotFoundException) {
+            result.setStatus(FAILED_STATUS);
+            result.setErrorMessage("無法寫入檔案: " + e.getMessage() + 
+                    "\n請確認應用程式有權限寫入文件，或是嘗試重新執行程式。");
+        } else {
+            result.setStatus(AUTH_REQUIRED_STATUS);
+            result.setErrorMessage("請使用以下指令取得 GCP 授權:\n\n" +
+                    "gcloud auth application-default login\n\n" +
+                    "或使用無瀏覽器模式:\n\n" +
+                    "gcloud auth application-default login --no-browser\n\n" +
+                    "授權完成後，請重新執行查核。");
+        }
+        result.setStackTrace(getStackTraceAsString(e));
+    }
+
+    /**
+     * 處理一般異常
+     */
+    private void handleGenericException(GcpAuditResult result, Exception e) {
+        result.setStatus(FAILED_STATUS);
+        result.setErrorMessage(e.getMessage());
+        result.setStackTrace(getStackTraceAsString(e));
+    }
+
+    /**
+     * 格式化查核結果訊息
+     */
+    private String formatAuditResultMessage(GcpAuditResult result) {
+        if (SUCCESS_STATUS.equals(result.getStatus())) {
+            return String.format("""
+                    ✅ GCP 查核成功！
+
+                    • 專案 ID：%s
+                    • 年度 / 季度：%s / %s
+                    • 查核時間：%s
+                    • 報告位置：%s
+
+                    若需開啟報告，請手動點開上方 Excel 檔案
+                    """, result.getProjectId(), result.getYear(), result.getQuarter(),
+                    result.getAuditTime(), result.getReportFilePath());
+        } else {
+            return String.format("""
+                    ❌ GCP 查核失敗！
+
+                    • 專案 ID：%s
+                    • 年度 / 季度：%s / %s
+                    • 查核時間：%s
+                    • 錯誤訊息：%s
+                    • 堆疊追蹤：%s
+                    """, result.getProjectId(), result.getYear(), result.getQuarter(),
+                    result.getAuditTime(), result.getErrorMessage(), result.getStackTrace());
+        }
+    }
+
+    /**
      * 取得 Google 應用程式默認憑證
-     * 如果找不到憑證會拋出異常
      */
     private GoogleCredentials getCredentials() throws IOException {
         try {
-            // 嘗試取得應用程式默認憑證
             GoogleCredentials credentials = GoogleCredentials.getApplicationDefault();
 
-            // 確保憑證有足夠的權限範圍
             if (credentials.createScopedRequired()) {
                 credentials = credentials.createScoped(REQUIRED_SCOPES);
             }
 
             return credentials;
         } catch (IOException e) {
-            log.error("無法取得 Google 應用程式默認憑證", e);
-            log.error("堆疊追蹤: {}", getStackTraceAsString(e));
-            throw new IOException("需要 GCP 授權。請執行 'gcloud auth application-default login' 命令獲取憑證。");
+            throw new IOException("需要 GCP 授權。請執行 'gcloud auth application-default login' 命令獲取憑證。", e);
         }
     }
 
@@ -449,8 +480,6 @@ public class GcpAuditTool {
             return response.getServices().stream()
                     .anyMatch(service -> service.getName().contains(KMS_SERVICE_NAME));
         } catch (Exception e) {
-            log.error("檢查 KMS API 狀態時發生錯誤", e);
-            log.error("堆疊追蹤: {}", getStackTraceAsString(e));
             return false;
         }
     }
@@ -459,24 +488,8 @@ public class GcpAuditTool {
      * 查詢並記錄防火牆規則
      */
     private void inventoryFirewallRules(XSSFWorkbook workbook, String projectId) throws Exception {
-        log.info("正在獲取網路存取限制或防火牆規則");
-
         XSSFSheet sheet = workbook.createSheet("Network Rules");
-
-        // 創建標題列
-        XSSFRow headerRow = sheet.createRow(0);
-        headerRow.createCell(0).setCellValue("Direction");
-        headerRow.createCell(1).setCellValue("Source Ranges");
-        headerRow.createCell(2).setCellValue("Destination Ranges");
-        headerRow.createCell(3).setCellValue("Name");
-        headerRow.createCell(4).setCellValue("Purpose");
-
-        // 設置列寬
-        sheet.setColumnWidth(0, 15 * 256);
-        sheet.setColumnWidth(1, 30 * 256);
-        sheet.setColumnWidth(2, 30 * 256);
-        sheet.setColumnWidth(3, 30 * 256);
-        sheet.setColumnWidth(4, 40 * 256);
+        setupFirewallSheetHeader(sheet);
 
         try (FirewallsClient firewallsClient = FirewallsClient.create()) {
             ListFirewallsRequest listFirewallsRequest = ListFirewallsRequest.newBuilder()
@@ -489,42 +502,104 @@ public class GcpAuditTool {
             for (Firewall firewall : firewallsClient.list(listFirewallsRequest).iterateAll()) {
                 hasRules = true;
                 XSSFRow row = sheet.createRow(rowNum++);
-                row.createCell(0).setCellValue(firewall.getDirection().toString());
-                row.createCell(1).setCellValue(String.join(", ", firewall.getSourceRangesList()));
-                row.createCell(2).setCellValue(String.join(", ", firewall.getDestinationRangesList()));
-                row.createCell(3).setCellValue(firewall.getName());
-                row.createCell(4).setCellValue(firewall.getDescription());
+                populateFirewallRow(row, firewall);
             }
 
             if (!hasRules) {
-                XSSFRow row = sheet.createRow(1);
-                row.createCell(0).setCellValue("無");
-                row.createCell(1).setCellValue("無");
-                row.createCell(2).setCellValue("無");
-                row.createCell(3).setCellValue("無");
-                row.createCell(4).setCellValue("無");
+                createEmptyFirewallRow(sheet);
             }
         } catch (Exception e) {
-            XSSFRow row = sheet.createRow(1);
-            row.createCell(0).setCellValue("無");
-            row.createCell(1).setCellValue("無");
-            row.createCell(2).setCellValue("無");
-            row.createCell(3).setCellValue("無");
-            row.createCell(4).setCellValue("無");
-            log.error("無法取得防火牆規則資訊: {}", e.getMessage());
-            log.error("堆疊追蹤: {}", getStackTraceAsString(e));
+            createEmptyFirewallRow(sheet);
             throw new Exception("無法取得防火牆規則資訊: " + e.getMessage(), e);
         }
+    }
+
+    /**
+     * 設置防火牆表格標題
+     */
+    private void setupFirewallSheetHeader(XSSFSheet sheet) {
+        XSSFRow headerRow = sheet.createRow(0);
+        headerRow.createCell(0).setCellValue("Direction");
+        headerRow.createCell(1).setCellValue("Source Ranges");
+        headerRow.createCell(2).setCellValue("Destination Ranges");
+        headerRow.createCell(3).setCellValue("Name");
+        headerRow.createCell(4).setCellValue("Purpose");
+
+        sheet.setColumnWidth(0, 15 * 256);
+        sheet.setColumnWidth(1, 30 * 256);
+        sheet.setColumnWidth(2, 30 * 256);
+        sheet.setColumnWidth(3, 30 * 256);
+        sheet.setColumnWidth(4, 40 * 256);
+    }
+
+    /**
+     * 填充防火牆規則行
+     */
+    private void populateFirewallRow(XSSFRow row, Firewall firewall) {
+        row.createCell(0).setCellValue(firewall.getDirection().toString());
+        row.createCell(1).setCellValue(String.join(", ", firewall.getSourceRangesList()));
+        row.createCell(2).setCellValue(String.join(", ", firewall.getDestinationRangesList()));
+        row.createCell(3).setCellValue(firewall.getName());
+        row.createCell(4).setCellValue(firewall.getDescription());
+    }
+
+    /**
+     * 創建空的防火牆規則行
+     */
+    private void createEmptyFirewallRow(XSSFSheet sheet) {
+        XSSFRow row = sheet.createRow(1);
+        row.createCell(0).setCellValue("無");
+        row.createCell(1).setCellValue("無");
+        row.createCell(2).setCellValue("無");
+        row.createCell(3).setCellValue("無");
+        row.createCell(4).setCellValue("無");
     }
 
     /**
      * 查詢並記錄自攜金鑰(BYOK)
      */
     private void showBYOK(XSSFWorkbook workbook, String projectId) throws IOException {
-        log.info("正在獲取自攜金鑰(BYOK)信息");
-
         XSSFSheet sheet = workbook.createSheet("BYOK");
+        setupBYOKSheetHeader(sheet);
 
+        if (!isKmsApiEnabled(projectId)) {
+            createEmptyBYOKRow(sheet);
+            return;
+        }
+
+        try (KeyManagementServiceClient client = KeyManagementServiceClient.create()) {
+            int rowNum = 1;
+            boolean hasImportedKeys = false;
+
+            ListLocationsRequest listLocationsRequest = ListLocationsRequest.newBuilder()
+                    .setName(String.format("projects/%s", projectId))
+                    .build();
+
+            for (Location location : client.listLocations(listLocationsRequest).iterateAll()) {
+                String locationId = location.getLocationId();
+                hasImportedKeys = processKeysInLocation(client, projectId, locationId, sheet, rowNum, hasImportedKeys);
+                if (hasImportedKeys) {
+                    rowNum++;
+                }
+            }
+
+            if (!hasImportedKeys) {
+                createEmptyBYOKRow(sheet);
+            }
+        } catch (com.google.api.gax.rpc.PermissionDeniedException e) {
+            XSSFRow row = sheet.createRow(1);
+            row.createCell(0).setCellValue("權限不足，無法存取 Cloud KMS 服務");
+            row.createCell(1).setCellValue("無");
+            row.createCell(2).setCellValue("無");
+            row.createCell(3).setCellValue("無");
+            throw new IOException("無法存取 Cloud KMS 服務: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 設置 BYOK 表格標題
+     */
+    private void setupBYOKSheetHeader(XSSFSheet sheet) {
         XSSFRow headerRow = sheet.createRow(0);
         headerRow.createCell(0).setCellValue("Key Name");
         headerRow.createCell(1).setCellValue("Type (ex. RSA-2048)");
@@ -535,125 +610,133 @@ public class GcpAuditTool {
         sheet.setColumnWidth(1, 20 * 256);
         sheet.setColumnWidth(2, 15 * 256);
         sheet.setColumnWidth(3, 15 * 256);
+    }
 
-        if (!isKmsApiEnabled(projectId)) {
-            XSSFRow row = sheet.createRow(1);
-            row.createCell(0).setCellValue("無");
-            row.createCell(1).setCellValue("無");
-            row.createCell(2).setCellValue("無");
-            row.createCell(3).setCellValue("無");
-        } else {
-            try (KeyManagementServiceClient client = KeyManagementServiceClient.create()) {
-                int rowNum = 1;
-                boolean hasImportedKeys = false;
+    /**
+     * 處理特定位置的金鑰
+     */
+    private boolean processKeysInLocation(KeyManagementServiceClient client, String projectId, 
+            String locationId, XSSFSheet sheet, int rowNum, boolean hasImportedKeys) {
+        
+        ListKeyRingsRequest listKeyRingsRequest = ListKeyRingsRequest.newBuilder()
+                .setParent(String.format("projects/%s/locations/%s", projectId, locationId))
+                .build();
 
-                ListLocationsRequest listLocationsRequest = ListLocationsRequest.newBuilder()
-                        .setName(String.format("projects/%s", projectId))
-                        .build();
+        for (KeyRing keyRing : client.listKeyRings(listKeyRingsRequest).iterateAll()) {
+            hasImportedKeys = processKeysInKeyRing(client, keyRing, sheet, rowNum, hasImportedKeys);
+        }
+        
+        return hasImportedKeys;
+    }
 
-                for (Location location : client.listLocations(listLocationsRequest).iterateAll()) {
-                    String locationId = location.getLocationId();
+    /**
+     * 處理特定金鑰環中的金鑰
+     */
+    private boolean processKeysInKeyRing(KeyManagementServiceClient client, 
+            KeyRing keyRing, XSSFSheet sheet, int rowNum, boolean hasImportedKeys) {
+        
+        ListCryptoKeysRequest listCryptoKeysRequest = ListCryptoKeysRequest.newBuilder()
+                .setParent(keyRing.getName())
+                .build();
 
-                    ListKeyRingsRequest listKeyRingsRequest = ListKeyRingsRequest.newBuilder()
-                            .setParent(String.format("projects/%s/locations/%s", projectId, locationId))
-                            .build();
-
-                    for (KeyRing keyRing : client.listKeyRings(listKeyRingsRequest).iterateAll()) {
-                        ListCryptoKeysRequest listCryptoKeysRequest = ListCryptoKeysRequest.newBuilder()
-                                .setParent(keyRing.getName())
-                                .build();
-
-                        for (CryptoKey cryptoKey : client.listCryptoKeys(listCryptoKeysRequest).iterateAll()) {
-                            if (cryptoKey.getImportOnly()) {
-                                hasImportedKeys = true;
-                                XSSFRow row = sheet.createRow(rowNum++);
-                                row.createCell(0).setCellValue(cryptoKey.getName());
-                                row.createCell(1).setCellValue(cryptoKey.getPurpose().toString());
-                                row.createCell(2).setCellValue(getKeyLifecycle(client, cryptoKey));
-                                row.createCell(3).setCellValue(getKeyManager(cryptoKey));
-                            }
-                        }
-                    }
-                }
-
-                if (!hasImportedKeys) {
-                    XSSFRow row = sheet.createRow(1);
-                    row.createCell(0).setCellValue("無");
-                    row.createCell(1).setCellValue("無");
-                    row.createCell(2).setCellValue("無");
-                    row.createCell(3).setCellValue("無");
-                }
-            } catch (com.google.api.gax.rpc.PermissionDeniedException e) {
-                XSSFRow row = sheet.createRow(1);
-                row.createCell(0).setCellValue("權限不足，無法存取 Cloud KMS 服務");
-                row.createCell(1).setCellValue("無");
-                row.createCell(2).setCellValue("無");
-                row.createCell(3).setCellValue("無");
-                log.error("無法存取 Cloud KMS 服務: {}", e.getMessage());
-                log.error("堆疊追蹤: {}", getStackTraceAsString(e));
-                throw new IOException("無法存取 Cloud KMS 服務: " + e.getMessage(), e);
+        for (CryptoKey cryptoKey : client.listCryptoKeys(listCryptoKeysRequest).iterateAll()) {
+            if (cryptoKey.getImportOnly()) {
+                hasImportedKeys = true;
+                XSSFRow row = sheet.createRow(rowNum);
+                row.createCell(0).setCellValue(cryptoKey.getName());
+                row.createCell(1).setCellValue(cryptoKey.getPurpose().toString());
+                row.createCell(2).setCellValue(getKeyLifecycle(client, cryptoKey));
+                row.createCell(3).setCellValue(getKeyManager(cryptoKey));
             }
         }
+        
+        return hasImportedKeys;
+    }
+
+    /**
+     * 創建空的 BYOK 行
+     */
+    private void createEmptyBYOKRow(XSSFSheet sheet) {
+        XSSFRow row = sheet.createRow(1);
+        row.createCell(0).setCellValue("無");
+        row.createCell(1).setCellValue("無");
+        row.createCell(2).setCellValue("無");
+        row.createCell(3).setCellValue("無");
     }
 
     /**
      * 查詢並記錄 IAM 權限
      */
     private void showIAM(XSSFWorkbook workbook, String projectId) throws IOException {
-        log.info("正在獲取 IAM 權限信息");
-
         XSSFSheet sheet = workbook.createSheet("IAM");
+        setupIAMSheetHeader(sheet);
 
+        try (ProjectsClient projectsClient = ProjectsClient.create()) {
+            ProjectName projectName = ProjectName.of(projectId);
+            Policy policy = projectsClient.getIamPolicy(projectName);
+
+            Map<String, IAM> iamMap = generateIAMMap(policy);
+            populateIAMSheet(sheet, new ArrayList<>(iamMap.values()), workbook);
+        } catch (Exception e) {
+            XSSFRow row = sheet.createRow(1);
+            row.createCell(0).setCellValue("無法取得 IAM 權限資訊");
+            row.createCell(1).setCellValue("無");
+            throw new IOException("無法取得 IAM 權限資訊: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 設置 IAM 表格標題
+     */
+    private void setupIAMSheetHeader(XSSFSheet sheet) {
         XSSFRow headerRow = sheet.createRow(0);
         headerRow.createCell(0).setCellValue("User/Group");
         headerRow.createCell(1).setCellValue("Permissions");
 
         sheet.setColumnWidth(0, 20 * 256);
         sheet.setColumnWidth(1, 50 * 256);
+    }
 
-        try (ProjectsClient projectsClient = ProjectsClient.create()) {
-            ProjectName projectName = ProjectName.of(projectId);
-            Policy policy = projectsClient.getIamPolicy(projectName);
+    /**
+     * 生成 IAM 映射
+     */
+    private Map<String, IAM> generateIAMMap(Policy policy) {
+        Map<String, IAM> iamMap = new HashMap<>();
 
-            Map<String, IAM> iamMap = new HashMap<>();
-
-            policy.getBindingsList().forEach(binding -> {
-                String role = binding.getRole();
-                binding.getMembersList().forEach(member -> {
-                    IAM iam = iamMap.computeIfAbsent(member, IAM::new);
-                    iam.addRole(role);
-                });
+        policy.getBindingsList().forEach(binding -> {
+            String role = binding.getRole();
+            binding.getMembersList().forEach(member -> {
+                IAM iam = iamMap.computeIfAbsent(member, IAM::new);
+                iam.addRole(role);
             });
+        });
 
-            List<IAM> iamList = new ArrayList<>(iamMap.values());
+        return iamMap;
+    }
 
-            int rowNum = 1;
-            for (IAM iam : iamList) {
-                if (iam.getName().startsWith("user") || iam.getName().startsWith("group")) {
-                    XSSFRow row = sheet.createRow(rowNum++);
-                    row.createCell(0).setCellValue(iam.getName());
-                    row.createCell(1).setCellValue(String.join("\n", iam.getRoles()));
+    /**
+     * 填充 IAM 表格
+     */
+    private void populateIAMSheet(XSSFSheet sheet, List<IAM> iamList, XSSFWorkbook workbook) {
+        int rowNum = 1;
+        for (IAM iam : iamList) {
+            if (iam.getName().startsWith("user") || iam.getName().startsWith("group")) {
+                XSSFRow row = sheet.createRow(rowNum++);
+                row.createCell(0).setCellValue(iam.getName());
+                row.createCell(1).setCellValue(String.join("\n", iam.getRoles()));
+            }
+        }
+
+        XSSFCellStyle wrapStyle = workbook.createCellStyle();
+        wrapStyle.setWrapText(true);
+        for (int i = 1; i < rowNum; i++) {
+            XSSFRow row = sheet.getRow(i);
+            if (row != null) {
+                XSSFCell cell = row.getCell(1);
+                if (cell != null) {
+                    cell.setCellStyle(wrapStyle);
                 }
             }
-
-            XSSFCellStyle wrapStyle = workbook.createCellStyle();
-            wrapStyle.setWrapText(true);
-            for (int i = 1; i < rowNum; i++) {
-                XSSFRow row = sheet.getRow(i);
-                if (row != null) {
-                    XSSFCell cell = row.getCell(1);
-                    if (cell != null) {
-                        cell.setCellStyle(wrapStyle);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            XSSFRow row = sheet.createRow(1);
-            row.createCell(0).setCellValue("無法取得 IAM 權限資訊");
-            row.createCell(1).setCellValue("無");
-            log.error("無法取得 IAM 權限資訊: {}", e.getMessage());
-            log.error("堆疊追蹤: {}", getStackTraceAsString(e));
-            throw new IOException("無法取得 IAM 權限資訊: " + e.getMessage(), e);
         }
     }
 

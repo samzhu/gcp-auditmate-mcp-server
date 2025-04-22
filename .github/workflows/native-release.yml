@@ -20,7 +20,7 @@ jobs:
     # 矩陣策略設置: 同時構建 Intel 和 ARM 版本
     strategy:
       matrix:
-        arch: [intel, arm]  # 定義兩種架構
+        arch: [intel]  # 目前只定義 Intel 架構，未來可以添加其他架構
         include:
           # Intel 設置
           - arch: intel
@@ -30,12 +30,12 @@ jobs:
             memory_options: "-Xmx12g -XX:MaxMetaspaceSize=1g"
             build_options: ""
           # ARM 設置
-          - arch: arm
-            runner: macos-latest  # 使用 macOS-latest (ARM 架構，僅 7GB 記憶體)
-            target_platform: darwin-aarch64  # GraalVM 目標平台
-            artifact_name: gcp-auditmate-mcp-server-darwin-aarch64  # 產物命名與 target_platform 一致
-            memory_options: "-Xmx5g -XX:MaxMetaspaceSize=512m"
-            build_options: ""
+          # - arch: arm
+          #   runner: macos-latest  # 使用 macOS-latest (ARM 架構，僅 7GB 記憶體)
+          #   target_platform: darwin-aarch64  # GraalVM 目標平台
+          #   artifact_name: gcp-auditmate-mcp-server-darwin-aarch64  # 產物命名與 target_platform 一致
+          #   memory_options: "-Xmx5g -XX:MaxMetaspaceSize=512m"
+          #   build_options: "-H:+PrintAnalysisCallTree -H:+PrintImageHeapPartitionSizes --no-fallback"
 
     # 根據矩陣變量選擇對應的運行環境
     runs-on: ${{ matrix.runner }}
@@ -97,8 +97,6 @@ jobs:
                  --trace-class-initialization=java.awt.Toolkit,org.apache.poi.ss.format.CellFormatPart \\
                  -H:EnableURLProtocols=http,https \\
                  -H:+AddAllCharsets \\
-                 -H:+PrintAnalysisCallTree \\
-                 --no-fallback \\
                  -Djava.awt.headless=true \\
                  -Dapple.awt.headless=true \\
                  -Dorg.apache.poi.ss.disableAutoColumnWidth=true \\
@@ -183,8 +181,7 @@ jobs:
           mkdir -p combined_release
           cp release/${{ env.INTEL_ARTIFACT }}/${{ env.INTEL_ARTIFACT }} combined_release/
           cp release/${{ env.INTEL_ARTIFACT }}/${{ env.INTEL_ARTIFACT }}.zip combined_release/
-          cp release/${{ env.ARM_ARTIFACT }}/${{ env.ARM_ARTIFACT }} combined_release/
-          cp release/${{ env.ARM_ARTIFACT }}/${{ env.ARM_ARTIFACT }}.zip combined_release/
+
       
       # 第5步: 創建 GitHub Release
       - name: Create Release
@@ -195,9 +192,8 @@ jobs:
           body: |
             GCP Auditmate MCP Server for Mac
             
-            包含兩個版本:
+            目前只提供:
             - Intel Mac (x86_64): ${{ env.INTEL_ARTIFACT }}
-            - Apple Silicon Mac (ARM64): ${{ env.ARM_ARTIFACT }}
             
             Built on: ${{ github.event.repository.updated_at }}
             Commit: ${{ github.sha }}
@@ -206,8 +202,7 @@ jobs:
           files: |
             combined_release/${{ env.INTEL_ARTIFACT }}
             combined_release/${{ env.INTEL_ARTIFACT }}.zip
-            combined_release/${{ env.ARM_ARTIFACT }}
-            combined_release/${{ env.ARM_ARTIFACT }}.zip
+            # ARM 文件已被移除，未來添加其他架構時可以擴展此處
 
   # 第三個任務: 部署 GitHub Pages
   # 此任務依賴於 build-and-release 任務完成
