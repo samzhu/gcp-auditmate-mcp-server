@@ -188,31 +188,36 @@
   <div class="container">
     <div class="header">
       <h1>GCP AuditMate MCP 伺服器</h1>
-      <p>可以從 GitHub Releases 中獲取各平台的原生二進制檔案：</p>
+      <p>最新的原生二進制檔案可以從 <a href="https://github.com/samzhu/gcp-auditmate-mcp-server/releases">GitHub Releases</a> 頁面下載。</p>
     </div>
     
     <div class="artifact">
       <h2>macOS 版本 (Intel 晶片)</h2>
       <p>適用於 Intel 處理器的 Mac 電腦。</p>
-      <p>下載連結：<a href="https://github.com/github-samzhu/gcp-auditmate-mcp-server/releases/latest/download/gcp-auditmate-mcp-server-darwin-x86_64">直接下載</a> 或 
-      <a href="https://github.com/github-samzhu/gcp-auditmate-mcp-server/releases/latest/download/gcp-auditmate-mcp-server-darwin-x86_64.zip">ZIP 壓縮包</a></p>
+      <p>請前往 <a href="https://github.com/samzhu/gcp-auditmate-mcp-server/releases">GitHub Releases</a> 頁面，下載以下檔案：</p>
+      <ul>
+        <li><code>gcp-auditmate-mcp-server-darwin-x86_64</code> (執行檔)</li>
+        <li><code>gcp-auditmate-mcp-server-darwin-x86_64.zip</code> (壓縮包)</li>
+      </ul>
     </div>
     
     <div class="artifact">
       <h2>macOS 版本 (Apple Silicon/ARM 晶片)</h2>
       <p>適用於 M1、M2、M3 等 Apple Silicon 晶片的 Mac 電腦。</p>
-      <p>下載連結：<a href="https://github.com/github-samzhu/gcp-auditmate-mcp-server/releases/latest/download/gcp-auditmate-mcp-server-darwin-aarch64">直接下載</a> 或 
-      <a href="https://github.com/github-samzhu/gcp-auditmate-mcp-server/releases/latest/download/gcp-auditmate-mcp-server-darwin-aarch64.zip">ZIP 壓縮包</a></p>
+      <p>請前往 <a href="https://github.com/samzhu/gcp-auditmate-mcp-server/releases">GitHub Releases</a> 頁面，下載以下檔案：</p>
+      <ul>
+        <li><code>gcp-auditmate-mcp-server-darwin-aarch64</code> (執行檔)</li>
+        <li><code>gcp-auditmate-mcp-server-darwin-aarch64.zip</code> (壓縮包)</li>
+      </ul>
     </div>
     
     <div class="artifact">
       <h2>軟件物料清單 (SBOM)</h2>
       <p>我們提供本應用程式的軟件物料清單 (SBOM)，列出所有依賴組件及其版本資訊，有助於了解軟件組成、識別潛在安全風險及遵循開源許可證要求。</p>
-      <p>可以通過以下格式獲取最新版本的 SBOM：</p>
+      <p>您可以透過以下方式獲取最新版本的 SBOM：</p>
       <ul>
-        <li><a href="https://github.com/github-samzhu/gcp-auditmate-mcp-server/releases/latest/download/gcp-auditmate-mcp-server-darwin-x86_64-bom.json">JSON 格式</a> - 適合機器讀取和進一步處理</li>
-        <li><a href="https://github.com/github-samzhu/gcp-auditmate-mcp-server/releases/latest/download/gcp-auditmate-mcp-server-darwin-x86_64-bom.xml">XML 格式</a> - 與多種 SBOM 工具相容</li>
-        <li><a href="https://github.com/github-samzhu/gcp-auditmate-mcp-server/releases/latest/download/gcp-auditmate-mcp-server-darwin-x86_64-report.html">HTML 報告</a> - 提供直觀的視覺化界面，展示依賴關係、許可證分佈和潛在漏洞</li>
+        <li><a href="https://github.com/samzhu/gcp-auditmate-mcp-server/releases/latest/download/gcp-auditmate-mcp-server-darwin-x86_64-bom.json">下載 JSON 格式</a> - 適合機器讀取和進一步處理</li>
+        <li><a href="sbom/">查看互動式 HTML 報告</a> - 提供直觀的視覺化界面，展示依賴關係、許可證分佈和潛在漏洞</li>
       </ul>
       <p><strong>提示：</strong>HTML 報告由 CycloneDX Sunshine 工具生成，包含互動式的圖表和表格，是了解軟件依賴結構的最佳方式。</p>
     </div>
@@ -220,8 +225,8 @@
     <h2>使用說明</h2>
     <div class="artifact">
       <div class="instruction-step">
-        <h3>下載並解壓執行檔</h3>
-        <p>下載適合您 Mac 系統晶片類型的執行檔到您習慣的目錄，例如 /Users/username</p>
+        <h3>下載執行檔</h3>
+        <p>從 <a href="https://github.com/samzhu/gcp-auditmate-mcp-server/releases">GitHub Releases</a> 下載適合您 Mac 系統晶片類型的 <strong>執行檔</strong> (非 ZIP 壓縮包) 到您習慣的目錄，例如 <code>/Users/username/</code>。</p>
         <p>如果您不確定您的 Mac 使用哪種晶片，請點擊左上角蘋果圖示 > 關於這台 Mac 查看處理器資訊。</p>
       </div>
       
@@ -254,7 +259,7 @@ xattr -cr /Users/username/gcp-auditmate-mcp-server-darwin-aarch64</pre>
         <h3>設定 Claude Desktop</h3>
         <p>打開 Claude Desktop 設定檔。在 macOS 上路徑通常為：<code>/Users/username/Library/Application Support/Claude/claude_desktop_config.json</code></p>
         <p>新增以下設定，請將命令路徑替換為您實際的執行檔路徑：</p>
-        <pre>{
+        <pre>{  
     "mcpServers": {
         "gcp-auditmate-mcp-server": {
             "command": "/Users/username/gcp-auditmate-mcp-server-darwin-x86_64"
@@ -262,7 +267,7 @@ xattr -cr /Users/username/gcp-auditmate-mcp-server-darwin-aarch64</pre>
     }
 }</pre>
         <p>或者對於 ARM 版本：</p>
-        <pre>{
+        <pre>{  
     "mcpServers": {
         "gcp-auditmate-mcp-server": {
             "command": "/Users/username/gcp-auditmate-mcp-server-darwin-aarch64"
