@@ -27,17 +27,21 @@ jobs:
             runner: macos-13  # 使用 macOS 13 (Intel) 的運行環境
             target_platform: darwin-x86_64  # GraalVM 目標平台
             artifact_name: gcp-auditmate-mcp-server-darwin-x86_64  # 產物命名與 target_platform 一致
+            memory_options: "-Xmx12g -XX:MaxMetaspaceSize=1g"
+            build_options: ""
           # ARM 設置
           - arch: arm
-            runner: macos-14  # 使用 macOS 14 (可運行 ARM 編譯) 的運行環境
+            runner: macos-latest  # 使用 macOS-latest (ARM 架構，僅 7GB 記憶體)
             target_platform: darwin-aarch64  # GraalVM 目標平台
             artifact_name: gcp-auditmate-mcp-server-darwin-aarch64  # 產物命名與 target_platform 一致
+            memory_options: "-Xmx5g -XX:MaxMetaspaceSize=512m"
+            build_options: "-H:+PrintAnalysisCallTree -H:+PrintImageHeapPartitionSizes --no-fallback"
 
     # 根據矩陣變量選擇對應的運行環境
     runs-on: ${{ matrix.runner }}
 
     steps:
-      # 第1步: 檢出代碼庫s
+      # 第1步: 檢出代碼庫
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -48,7 +52,24 @@ jobs:
           java-version: '21'
           distribution: 'graalvm'
 
-      # 第3步: 創建 GraalVM 配置文件
+      # 第3步: 釋放系統資源
+      - name: Free System Resources for ARM build
+        if: matrix.arch == 'arm'
+        run: |
+          echo "Available memory before cleanup:"
+          vm_stat || top -l 1 | grep PhysMem
+          # 釋放 macOS 上的記憶體
+          sudo purge
+          echo "Available memory after cleanup:"
+          vm_stat || top -l 1 | grep PhysMem
+          # 停止不必要的服務
+          brew services list || true
+          # 顯示環境信息
+          java -version
+          echo "Processor info:"
+          sysctl -n machdep.cpu.brand_string || system_profiler SPHardwareDataType | grep Chip
+
+      # 第4步: 創建 GraalVM 配置文件
       # 這些配置對於正確構建原生執行檔非常重要，特別是針對使用到 AWT/Java2D 等需要特殊處理的功能
       - name: Create GraalVM Configuration Files
         run: |
@@ -71,6 +92,8 @@ jobs:
                  --initialize-at-run-time=org.apache.poi.hpsf.PropertySet \\
                  --initialize-at-run-time=org.apache.poi.util.ChainedProperties \\
                  --initialize-at-run-time=org.apache.poi.ss.util.SheetUtil \\
+                 --initialize-at-run-time=org.apache.poi.util \\
+                 --initialize-at-run-time=io.grpc \\
                  --trace-class-initialization=java.awt.Toolkit,org.apache.poi.ss.format.CellFormatPart \\
                  -H:EnableURLProtocols=http,https \\
                  -H:+AddAllCharsets \\
@@ -80,26 +103,33 @@ jobs:
                  -Dorg.apache.poi.ss.format.disable.color=true
           EOF
 
-      # 第4步: 構建原生執行檔
+      # 第5步: 準備和預熱 Gradle
+      - name: Prepare Gradle
+        run: |
+          ./gradlew clean
+          ./gradlew --stop
+          ./gradlew --status
+
+      # 第6步: 構建原生執行檔
       # 使用 GraalVM 的 native-image 工具將 Java 應用程序編譯為特定平台的原生執行檔
       - name: Build Native Executable
         run: ./gradlew nativeCompile -x test --info
         env:
-          # 設置 Java 工具選項，包括目標平台參數
-          JAVA_TOOL_OPTIONS: "-Xmx12g -XX:MaxMetaspaceSize=1g -Dnative-image.target-platform=${{ matrix.target_platform }}"
+          # 設置 Java 工具選項，包括目標平台參數和記憶體配置
+          JAVA_TOOL_OPTIONS: "${{ matrix.memory_options }} -Dnative-image.target-platform=${{ matrix.target_platform }} -Dnative-image.executor-thread-count=2 ${{ matrix.build_options }}"
 
-      # 第5步: 確保執行檔有執行權限
+      # 第7步: 確保執行檔有執行權限
       - name: Make MCP server executable
         run: chmod +x build/native/nativeCompile/gcp-auditmate-mcp-server
 
-      # 第6步: 設置版本號
+      # 第8步: 設置版本號
       - name: Set version
         run: |
           echo "VERSION=20250421.1" >> $GITHUB_ENV
           echo "RELEASE_TAG=v20250421.1" >> $GITHUB_ENV
           echo "RELEASE_NAME=Release v20250421.1" >> $GITHUB_ENV
       
-      # 第7步: 準備發布文件
+      # 第9步: 準備發布文件
       - name: Prepare release files
         run: |
           mkdir -p release
@@ -109,7 +139,7 @@ jobs:
           # 創建包含執行檔的 zip 壓縮包
           zip -r ${{ matrix.artifact_name }}.zip ${{ matrix.artifact_name }}
       
-      # 第8步: 上傳構建產物
+      # 第10步: 上傳構建產物
       # 這些產物將在後續的 create-release 任務中使用
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
