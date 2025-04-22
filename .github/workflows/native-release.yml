@@ -172,8 +172,8 @@ jobs:
           ./gradlew cyclonedxBom
           mkdir -p sbom
           cp build/reports/application.cdx.json sbom/gcp-auditmate-mcp-server-bom.json
-          cp build/reports/application.cdx.xml sbom/gcp-auditmate-mcp-server-bom.xml
-      
+          ls -la build/reports/
+
       # 第4步: 使用 Sunshine 生成 HTML 報告
       - name: Generate SBOM HTML report using Sunshine
         run: |
@@ -193,7 +193,6 @@ jobs:
           name: sbom-artifacts
           path: |
             sbom/gcp-auditmate-mcp-server-bom.json
-            sbom/gcp-auditmate-mcp-server-bom.xml
             sbom/gcp-auditmate-mcp-server-report.html
 
       # 第6步: 下載所有構建產物
@@ -223,11 +222,38 @@ jobs:
           cp release/${{ env.INTEL_ARTIFACT }}/${{ env.INTEL_ARTIFACT }} combined_release/
           cp release/${{ env.INTEL_ARTIFACT }}/${{ env.INTEL_ARTIFACT }}.zip combined_release/
           cp release/sbom-artifacts/gcp-auditmate-mcp-server-bom.json combined_release/${{ env.INTEL_ARTIFACT }}-bom.json
-          cp release/sbom-artifacts/gcp-auditmate-mcp-server-bom.xml combined_release/${{ env.INTEL_ARTIFACT }}-bom.xml
           cp release/sbom-artifacts/gcp-auditmate-mcp-server-report.html combined_release/${{ env.INTEL_ARTIFACT }}-report.html
 
+      # 第10步: 準備 GitHub Pages 內容
+      - name: Prepare GitHub Pages content
+        run: |
+          # 檢出代碼以獲取 site 目錄
+          git clone https://github.com/${{ github.repository }}.git tmp-repo
+          mkdir -p pages-content
+          cp -r tmp-repo/site/* pages-content/
+          
+          # 複製 SBOM HTML 報告到 pages-content 目錄
+          mkdir -p pages-content/sbom
+          cp release/sbom-artifacts/gcp-auditmate-mcp-server-report.html pages-content/sbom/index.html
+          cp release/sbom-artifacts/gcp-auditmate-mcp-server-bom.json pages-content/sbom/sbom.json
+          
+          # 創建 SBOM 頁面連結
+          cat >> pages-content/index.html << EOF
+          
+          <div class="artifact">
+            <h2>軟件物料清單 (SBOM) 詳細報告</h2>
+            <p>查看完整的<a href="sbom/">互動式 SBOM 報告</a>，了解本應用程式的所有依賴組件、許可證和潛在漏洞。</p>
+          </div>
+          EOF
       
-      # 第10步: 創建 GitHub Release
+      # 第11步: 上傳 GitHub Pages 內容
+      - name: Upload GitHub Pages content
+        uses: actions/upload-artifact@v4
+        with:
+          name: pages-content
+          path: pages-content
+
+      # 第12步: 創建 GitHub Release
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
@@ -240,8 +266,10 @@ jobs:
             - Intel Mac (x86_64): ${{ env.INTEL_ARTIFACT }}
             
             SBOM (軟件物料清單) 文件提供以下格式:
-            - JSON 和 XML 格式的原始 SBOM 數據
+            - JSON 格式的原始 SBOM 數據
             - HTML 報告 (由 CycloneDX Sunshine 生成)，包含可視化的依賴關係、漏洞和許可證信息
+            
+            查看完整的[互動式 SBOM 報告](https://github-samzhu.github.io/gcp-auditmate-mcp-server/sbom/)
             
             Built on: ${{ github.event.repository.updated_at }}
             Commit: ${{ github.sha }}
@@ -251,20 +279,22 @@ jobs:
             combined_release/${{ env.INTEL_ARTIFACT }}
             combined_release/${{ env.INTEL_ARTIFACT }}.zip
             combined_release/${{ env.INTEL_ARTIFACT }}-bom.json
-            combined_release/${{ env.INTEL_ARTIFACT }}-bom.xml
             combined_release/${{ env.INTEL_ARTIFACT }}-report.html
             # ARM 文件已被移除，未來添加其他架構時可以擴展此處
 
   # 第三個任務: 部署 GitHub Pages
-  # 此任務依賴於 build-and-release 任務完成
+  # 此任務依賴於 create-release 任務完成
   deploy-pages:
-    needs: build-and-release
+    needs: create-release
     runs-on: ubuntu-latest
     steps:
-      # 第1步: 檢出代碼庫
-      - name: Checkout
-        uses: actions/checkout@v4
-        
+      # 第1步: 下載 GitHub Pages 內容
+      - name: Download GitHub Pages content
+        uses: actions/download-artifact@v4
+        with:
+          name: pages-content
+          path: site
+      
       # 第2步: 上傳靜態網站內容
       - name: Upload static site as artifact
         uses: actions/upload-pages-artifact@v3
