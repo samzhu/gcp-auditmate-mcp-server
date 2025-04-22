@@ -42,17 +42,40 @@
     <a href="https://github.com/github-samzhu/gcp-auditmate-mcp-server/releases/latest/download/gcp-auditmate-mcp-server-darwin-aarch64.zip">ZIP 壓縮包</a></p>
   </div>
   
+  <div class="artifact">
+    <h2>軟件物料清單 (SBOM)</h2>
+    <p>我們提供本應用程式的軟件物料清單 (SBOM)，列出所有依賴組件及其版本資訊，有助於了解軟件組成、識別潛在安全風險及遵循開源許可證要求。</p>
+    <p>可以通過以下格式獲取最新版本的 SBOM：</p>
+    <ul>
+      <li><a href="https://github.com/github-samzhu/gcp-auditmate-mcp-server/releases/latest/download/gcp-auditmate-mcp-server-darwin-x86_64-bom.json">JSON 格式</a> - 適合機器讀取和進一步處理</li>
+      <li><a href="https://github.com/github-samzhu/gcp-auditmate-mcp-server/releases/latest/download/gcp-auditmate-mcp-server-darwin-x86_64-bom.xml">XML 格式</a> - 與多種 SBOM 工具相容</li>
+      <li><a href="https://github.com/github-samzhu/gcp-auditmate-mcp-server/releases/latest/download/gcp-auditmate-mcp-server-darwin-x86_64-report.html">HTML 報告</a> - 提供直觀的視覺化界面，展示依賴關係、許可證分佈和潛在漏洞</li>
+    </ul>
+    <p><strong>提示：</strong>HTML 報告由 CycloneDX Sunshine 工具生成，包含互動式的圖表和表格，是了解軟件依賴結構的最佳方式。</p>
+  </div>
+  
   <h2>使用說明</h2>
   <div class="artifact">
     <h3>步驟 1: 下載並解壓執行檔</h3>
     <p>下載適合您 Mac 系統晶片類型的執行檔到您習慣的目錄，例如 /Users/username</p>
     <p>如果您不確定您的 Mac 使用哪種晶片，請點擊左上角蘋果圖示 > 關於這台 Mac 查看處理器資訊。</p>
     
-    <h3>步驟 2: 設定執行權限</h3>
-    <p>開啟終端機並執行以下命令（路徑請替換為您的實際路徑）：</p>
-    <pre>chmod +x /Users/username/gcp-auditmate-mcp-server-darwin-x86_64</pre>
-    <p>或者對於 ARM 版本：</p>
-    <pre>chmod +x /Users/username/gcp-auditmate-mcp-server-darwin-aarch64</pre>
+    <h3>步驟 2: 設定執行權限和移除安全限制</h3>
+    <p>由於 macOS 的安全機制，您需要執行以下兩個命令來設定執行權限並移除安全屬性（路徑請替換為您的實際路徑）：</p>
+    
+    <p><strong>Intel Mac 用戶：</strong></p>
+    <pre>chmod +x /Users/username/gcp-auditmate-mcp-server-darwin-x86_64
+xattr -cr /Users/username/gcp-auditmate-mcp-server-darwin-x86_64</pre>
+    
+    <p><strong>Apple Silicon/ARM Mac 用戶：</strong></p>
+    <pre>chmod +x /Users/username/gcp-auditmate-mcp-server-darwin-aarch64
+xattr -cr /Users/username/gcp-auditmate-mcp-server-darwin-aarch64</pre>
+
+    <p><strong>指令說明：</strong></p>
+    <ul>
+      <li><code>chmod +x</code>：賦予檔案執行權限，允許檔案作為程式運行</li>
+      <li><code>xattr -cr</code>：移除 macOS 對從網路下載檔案施加的隔離屬性和安全限制，解決「來自未識別的開發者」的警告問題</li>
+    </ul>
     
     <h3>步驟 3: 登入 Google Cloud</h3>
     <p>在終端機執行以下命令：</p>

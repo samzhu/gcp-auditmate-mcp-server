@@ -110,7 +110,27 @@ jobs:
           ./gradlew --stop
           ./gradlew --status
 
-      # 第6步: 構建原生執行檔
+      # 第6步: 生成 CycloneDX SBOM
+      - name: Generate CycloneDX SBOM
+        run: |
+          ./gradlew cyclonedxBom
+          mkdir -p sbom
+          cp build/reports/bom.json sbom/${{ matrix.artifact_name }}-bom.json
+          cp build/reports/bom.xml sbom/${{ matrix.artifact_name }}-bom.xml
+
+      # 第7步: 使用 Sunshine 生成 HTML 報告
+      - name: Generate SBOM HTML report using Sunshine
+        run: |
+          # 安裝 Python (如果需要)
+          python -m pip install --upgrade pip
+          
+          # 下載 Sunshine 工具
+          curl -L -o sunshine.py https://raw.githubusercontent.com/CycloneDX/Sunshine/main/sunshine.py
+          
+          # 生成 HTML 報告
+          python sunshine.py -i sbom/${{ matrix.artifact_name }}-bom.json -o sbom/${{ matrix.artifact_name }}-report.html
+
+      # 第8步: 構建原生執行檔
       # 使用 GraalVM 的 native-image 工具將 Java 應用程序編譯為特定平台的原生執行檔
       - name: Build Native Executable
         run: ./gradlew nativeCompile -x test --info
@@ -118,18 +138,18 @@ jobs:
           # 設置 Java 工具選項，包括目標平台參數和記憶體配置
           JAVA_TOOL_OPTIONS: "${{ matrix.memory_options }} -Dnative-image.target-platform=${{ matrix.target_platform }} -Dnative-image.executor-thread-count=2 ${{ matrix.build_options }}"
 
-      # 第7步: 確保執行檔有執行權限
+      # 第9步: 確保執行檔有執行權限
       - name: Make MCP server executable
         run: chmod +x build/native/nativeCompile/gcp-auditmate-mcp-server
 
-      # 第8步: 設置版本號
+      # 第10步: 設置版本號
       - name: Set version
         run: |
           echo "VERSION=20250421.1" >> $GITHUB_ENV
           echo "RELEASE_TAG=v20250421.1" >> $GITHUB_ENV
           echo "RELEASE_NAME=Release v20250421.1" >> $GITHUB_ENV
       
-      # 第9步: 準備發布文件
+      # 第11步: 準備發布文件
       - name: Prepare release files
         run: |
           mkdir -p release
@@ -139,7 +159,7 @@ jobs:
           # 創建包含執行檔的 zip 壓縮包
           zip -r ${{ matrix.artifact_name }}.zip ${{ matrix.artifact_name }}
       
-      # 第10步: 上傳構建產物
+      # 第12步: 上傳構建產物
       # 這些產物將在後續的 create-release 任務中使用
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -148,6 +168,9 @@ jobs:
           path: |
             release/${{ matrix.artifact_name }}
             release/${{ matrix.artifact_name }}.zip
+            sbom/${{ matrix.artifact_name }}-bom.json
+            sbom/${{ matrix.artifact_name }}-bom.xml
+            sbom/${{ matrix.artifact_name }}-report.html
 
   # 第二個任務: 創建 GitHub Release
   # 此任務依賴於 build-and-release 任務完成
@@ -181,6 +204,9 @@ jobs:
           mkdir -p combined_release
           cp release/${{ env.INTEL_ARTIFACT }}/${{ env.INTEL_ARTIFACT }} combined_release/
           cp release/${{ env.INTEL_ARTIFACT }}/${{ env.INTEL_ARTIFACT }}.zip combined_release/
+          cp release/${{ env.INTEL_ARTIFACT }}/${{ env.INTEL_ARTIFACT }}-bom.json combined_release/
+          cp release/${{ env.INTEL_ARTIFACT }}/${{ env.INTEL_ARTIFACT }}-bom.xml combined_release/
+          cp release/${{ env.INTEL_ARTIFACT }}/${{ env.INTEL_ARTIFACT }}-report.html combined_release/
 
       
       # 第5步: 創建 GitHub Release
@@ -195,6 +221,10 @@ jobs:
             目前只提供:
             - Intel Mac (x86_64): ${{ env.INTEL_ARTIFACT }}
             
+            SBOM (軟件物料清單) 文件提供以下格式:
+            - JSON 和 XML 格式的原始 SBOM 數據
+            - HTML 報告 (由 CycloneDX Sunshine 生成)，包含可視化的依賴關係、漏洞和許可證信息
+            
             Built on: ${{ github.event.repository.updated_at }}
             Commit: ${{ github.sha }}
           draft: false  # 設為 true 可以創建草稿 release
@@ -202,6 +232,9 @@ jobs:
           files: |
             combined_release/${{ env.INTEL_ARTIFACT }}
             combined_release/${{ env.INTEL_ARTIFACT }}.zip
+            combined_release/${{ env.INTEL_ARTIFACT }}-bom.json
+            combined_release/${{ env.INTEL_ARTIFACT }}-bom.xml
+            combined_release/${{ env.INTEL_ARTIFACT }}-report.html
             # ARM 文件已被移除，未來添加其他架構時可以擴展此處
 
   # 第三個任務: 部署 GitHub Pages
