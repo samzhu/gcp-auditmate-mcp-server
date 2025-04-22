@@ -1,114 +1,288 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-TW">
 
 <head>
   <title>GCP AuditMate MCP 伺服器</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- RetroUI 推薦字體 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Share+Tech&display=swap" rel="stylesheet" />
+  
   <style>
+    :root {
+      --font-head: "Archivo Black", sans-serif;
+      --font-sans: "Share Tech", sans-serif;
+      --primary-500: #FFCC00;
+      --primary-700: #FF9F00;
+      --primary-100: #FFFAC2;
+      --primary-50: #FFFEF0;
+    }
+    
     body {
-      font-family: Arial, sans-serif;
+      font-family: var(--font-sans);
       max-width: 800px;
       margin: 0 auto;
       padding: 20px;
+      background-color: var(--primary-50);
+      line-height: 1.6;
+      color: #000;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      font-family: var(--font-head);
+      color: #000;
+      text-transform: uppercase;
+      margin-top: 1.5em;
+      margin-bottom: 0.5em;
     }
 
     h1 {
-      color: #333;
+      font-size: 2.5rem;
+      border-bottom: 3px solid #000;
+      padding-bottom: 10px;
+      position: relative;
+      display: inline-block;
+    }
+    
+    h1:after {
+      content: "";
+      position: absolute;
+      bottom: -8px;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background-color: var(--primary-500);
+    }
+
+    h2 {
+      font-size: 1.8rem;
+      position: relative;
+      margin-bottom: 1em;
+      margin-top: 1.2em;
+    }
+    
+    h3 {
+      font-size: 1.4rem;
+      margin-top: 1.2em;
+    }
+
+    a {
+      color: #000;
+      text-decoration: none;
+      font-weight: bold;
+      position: relative;
+      padding: 0 2px;
+      background-color: var(--primary-500);
+      box-shadow: 1px 1px 0 0 #000;
+      transition: all 0.2s ease;
+    }
+
+    a:hover {
+      transform: translate(-1px, -1px);
+      box-shadow: 3px 3px 0 0 #000;
     }
 
     .artifact {
-      margin-bottom: 20px;
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 5px;
+      margin-bottom: 25px;
+      padding: 20px;
+      border: 3px solid #000;
+      background-color: white;
+      box-shadow: 5px 5px 0 0 #000;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .artifact:before {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: 0;
+      border-style: solid;
+      border-width: 0 25px 25px 0;
+      border-color: transparent var(--primary-500) transparent transparent;
+    }
+
+    pre {
+      background-color: #000;
+      color: var(--primary-500);
+      font-family: monospace;
+      padding: 15px;
+      overflow-x: auto;
+      box-shadow: 3px 3px 0 0 var(--primary-700);
+      border: 1px solid var(--primary-700);
+    }
+
+    code {
+      background-color: var(--primary-100);
+      padding: 2px 4px;
+      border: 1px solid #000;
+    }
+
+    ul {
+      list-style-type: square;
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+
+    img {
+      max-width: 100%;
+      border: 3px solid #000;
+      box-shadow: 5px 5px 0 0 #000;
+      margin: 15px 0;
+      display: block;
+    }
+
+    .btn {
+      display: inline-block;
+      font-family: var(--font-head);
+      padding: 8px 16px;
+      margin: 5px 0;
+      background-color: var(--primary-500);
+      border: 3px solid #000;
+      box-shadow: 3px 3px 0 0 #000;
+      text-transform: uppercase;
+      transition: all 0.2s ease;
+    }
+
+    .btn:hover {
+      transform: translate(-2px, -2px);
+      box-shadow: 5px 5px 0 0 #000;
+    }
+    
+    strong {
+      background-color: var(--primary-100);
+      padding: 0 3px;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    
+    .instruction-step {
+      counter-increment: step-counter;
+      position: relative;
+    }
+    
+    .instruction-step h3:before {
+      content: "步驟 " counter(step-counter);
+      font-family: var(--font-head);
+      display: block;
+      font-size: 0.8em;
+      color: var(--primary-700);
     }
   </style>
 </head>
 
 <body>
-  <h1>GCP AuditMate MCP 伺服器</h1>
-  <p>可以從 GitHub Releases 中獲取各平台的原生二進制檔案：</p>
-  
-  <div class="artifact">
-    <h2>macOS 版本 (Intel 晶片)</h2>
-    <p>適用於 Intel 處理器的 Mac 電腦。</p>
-    <p>下載連結：<a href="https://github.com/github-samzhu/gcp-auditmate-mcp-server/releases/latest/download/gcp-auditmate-mcp-server-darwin-x86_64">直接下載</a> 或 
-    <a href="https://github.com/github-samzhu/gcp-auditmate-mcp-server/releases/latest/download/gcp-auditmate-mcp-server-darwin-x86_64.zip">ZIP 壓縮包</a></p>
-  </div>
-  
-  <div class="artifact">
-    <h2>macOS 版本 (Apple Silicon/ARM 晶片)</h2>
-    <p>適用於 M1、M2、M3 等 Apple Silicon 晶片的 Mac 電腦。</p>
-    <p>下載連結：<a href="https://github.com/github-samzhu/gcp-auditmate-mcp-server/releases/latest/download/gcp-auditmate-mcp-server-darwin-aarch64">直接下載</a> 或 
-    <a href="https://github.com/github-samzhu/gcp-auditmate-mcp-server/releases/latest/download/gcp-auditmate-mcp-server-darwin-aarch64.zip">ZIP 壓縮包</a></p>
-  </div>
-  
-  <div class="artifact">
-    <h2>軟件物料清單 (SBOM)</h2>
-    <p>我們提供本應用程式的軟件物料清單 (SBOM)，列出所有依賴組件及其版本資訊，有助於了解軟件組成、識別潛在安全風險及遵循開源許可證要求。</p>
-    <p>可以通過以下格式獲取最新版本的 SBOM：</p>
-    <ul>
-      <li><a href="https://github.com/github-samzhu/gcp-auditmate-mcp-server/releases/latest/download/gcp-auditmate-mcp-server-darwin-x86_64-bom.json">JSON 格式</a> - 適合機器讀取和進一步處理</li>
-      <li><a href="https://github.com/github-samzhu/gcp-auditmate-mcp-server/releases/latest/download/gcp-auditmate-mcp-server-darwin-x86_64-bom.xml">XML 格式</a> - 與多種 SBOM 工具相容</li>
-      <li><a href="https://github.com/github-samzhu/gcp-auditmate-mcp-server/releases/latest/download/gcp-auditmate-mcp-server-darwin-x86_64-report.html">HTML 報告</a> - 提供直觀的視覺化界面，展示依賴關係、許可證分佈和潛在漏洞</li>
-    </ul>
-    <p><strong>提示：</strong>HTML 報告由 CycloneDX Sunshine 工具生成，包含互動式的圖表和表格，是了解軟件依賴結構的最佳方式。</p>
-  </div>
-  
-  <h2>使用說明</h2>
-  <div class="artifact">
-    <h3>步驟 1: 下載並解壓執行檔</h3>
-    <p>下載適合您 Mac 系統晶片類型的執行檔到您習慣的目錄，例如 /Users/username</p>
-    <p>如果您不確定您的 Mac 使用哪種晶片，請點擊左上角蘋果圖示 > 關於這台 Mac 查看處理器資訊。</p>
+  <div class="container">
+    <div class="header">
+      <h1>GCP AuditMate MCP 伺服器</h1>
+      <p>可以從 GitHub Releases 中獲取各平台的原生二進制檔案：</p>
+    </div>
     
-    <h3>步驟 2: 設定執行權限和移除安全限制</h3>
-    <p>由於 macOS 的安全機制，您需要執行以下兩個命令來設定執行權限並移除安全屬性（路徑請替換為您的實際路徑）：</p>
+    <div class="artifact">
+      <h2>macOS 版本 (Intel 晶片)</h2>
+      <p>適用於 Intel 處理器的 Mac 電腦。</p>
+      <p>下載連結：<a href="https://github.com/github-samzhu/gcp-auditmate-mcp-server/releases/latest/download/gcp-auditmate-mcp-server-darwin-x86_64">直接下載</a> 或 
+      <a href="https://github.com/github-samzhu/gcp-auditmate-mcp-server/releases/latest/download/gcp-auditmate-mcp-server-darwin-x86_64.zip">ZIP 壓縮包</a></p>
+    </div>
     
-    <p><strong>Intel Mac 用戶：</strong></p>
-    <pre>chmod +x /Users/username/gcp-auditmate-mcp-server-darwin-x86_64
+    <div class="artifact">
+      <h2>macOS 版本 (Apple Silicon/ARM 晶片)</h2>
+      <p>適用於 M1、M2、M3 等 Apple Silicon 晶片的 Mac 電腦。</p>
+      <p>下載連結：<a href="https://github.com/github-samzhu/gcp-auditmate-mcp-server/releases/latest/download/gcp-auditmate-mcp-server-darwin-aarch64">直接下載</a> 或 
+      <a href="https://github.com/github-samzhu/gcp-auditmate-mcp-server/releases/latest/download/gcp-auditmate-mcp-server-darwin-aarch64.zip">ZIP 壓縮包</a></p>
+    </div>
+    
+    <div class="artifact">
+      <h2>軟件物料清單 (SBOM)</h2>
+      <p>我們提供本應用程式的軟件物料清單 (SBOM)，列出所有依賴組件及其版本資訊，有助於了解軟件組成、識別潛在安全風險及遵循開源許可證要求。</p>
+      <p>可以通過以下格式獲取最新版本的 SBOM：</p>
+      <ul>
+        <li><a href="https://github.com/github-samzhu/gcp-auditmate-mcp-server/releases/latest/download/gcp-auditmate-mcp-server-darwin-x86_64-bom.json">JSON 格式</a> - 適合機器讀取和進一步處理</li>
+        <li><a href="https://github.com/github-samzhu/gcp-auditmate-mcp-server/releases/latest/download/gcp-auditmate-mcp-server-darwin-x86_64-bom.xml">XML 格式</a> - 與多種 SBOM 工具相容</li>
+        <li><a href="https://github.com/github-samzhu/gcp-auditmate-mcp-server/releases/latest/download/gcp-auditmate-mcp-server-darwin-x86_64-report.html">HTML 報告</a> - 提供直觀的視覺化界面，展示依賴關係、許可證分佈和潛在漏洞</li>
+      </ul>
+      <p><strong>提示：</strong>HTML 報告由 CycloneDX Sunshine 工具生成，包含互動式的圖表和表格，是了解軟件依賴結構的最佳方式。</p>
+    </div>
+    
+    <h2>使用說明</h2>
+    <div class="artifact">
+      <div class="instruction-step">
+        <h3>下載並解壓執行檔</h3>
+        <p>下載適合您 Mac 系統晶片類型的執行檔到您習慣的目錄，例如 /Users/username</p>
+        <p>如果您不確定您的 Mac 使用哪種晶片，請點擊左上角蘋果圖示 > 關於這台 Mac 查看處理器資訊。</p>
+      </div>
+      
+      <div class="instruction-step">
+        <h3>設定執行權限和移除安全限制</h3>
+        <p>由於 macOS 的安全機制，您需要執行以下兩個命令來設定執行權限並移除安全屬性（路徑請替換為您的實際路徑）：</p>
+        
+        <p><strong>Intel Mac 用戶：</strong></p>
+        <pre>chmod +x /Users/username/gcp-auditmate-mcp-server-darwin-x86_64
 xattr -cr /Users/username/gcp-auditmate-mcp-server-darwin-x86_64</pre>
-    
-    <p><strong>Apple Silicon/ARM Mac 用戶：</strong></p>
-    <pre>chmod +x /Users/username/gcp-auditmate-mcp-server-darwin-aarch64
+        
+        <p><strong>Apple Silicon/ARM Mac 用戶：</strong></p>
+        <pre>chmod +x /Users/username/gcp-auditmate-mcp-server-darwin-aarch64
 xattr -cr /Users/username/gcp-auditmate-mcp-server-darwin-aarch64</pre>
 
-    <p><strong>指令說明：</strong></p>
-    <ul>
-      <li><code>chmod +x</code>：賦予檔案執行權限，允許檔案作為程式運行</li>
-      <li><code>xattr -cr</code>：移除 macOS 對從網路下載檔案施加的隔離屬性和安全限制，解決「來自未識別的開發者」的警告問題</li>
-    </ul>
-    
-    <h3>步驟 3: 登入 Google Cloud</h3>
-    <p>在終端機執行以下命令：</p>
-    <pre>gcloud auth application-default login</pre>
-    
-    <h3>步驟 4: 設定 Claude Desktop</h3>
-    <p>打開 Claude Desktop 設定檔。在 macOS 上路徑通常為：<code>/Users/username/Library/Application Support/Claude/claude_desktop_config.json</code></p>
-    <p>新增以下設定，請將命令路徑替換為您實際的執行檔路徑：</p>
-    <pre>{
+        <p><strong>指令說明：</strong></p>
+        <ul>
+          <li><code>chmod +x</code>：賦予檔案執行權限，允許檔案作為程式運行</li>
+          <li><code>xattr -cr</code>：移除 macOS 對從網路下載檔案施加的隔離屬性和安全限制，解決「來自未識別的開發者」的警告問題</li>
+        </ul>
+      </div>
+      
+      <div class="instruction-step">
+        <h3>登入 Google Cloud</h3>
+        <p>在終端機執行以下命令：</p>
+        <pre>gcloud auth application-default login</pre>
+      </div>
+      
+      <div class="instruction-step">
+        <h3>設定 Claude Desktop</h3>
+        <p>打開 Claude Desktop 設定檔。在 macOS 上路徑通常為：<code>/Users/username/Library/Application Support/Claude/claude_desktop_config.json</code></p>
+        <p>新增以下設定，請將命令路徑替換為您實際的執行檔路徑：</p>
+        <pre>{
     "mcpServers": {
         "gcp-auditmate-mcp-server": {
             "command": "/Users/username/gcp-auditmate-mcp-server-darwin-x86_64"
         }
     }
 }</pre>
-    <p>或者對於 ARM 版本：</p>
-    <pre>{
+        <p>或者對於 ARM 版本：</p>
+        <pre>{
     "mcpServers": {
         "gcp-auditmate-mcp-server": {
             "command": "/Users/username/gcp-auditmate-mcp-server-darwin-aarch64"
         }
     }
 }</pre>
-    
-    <h3>步驟 5: 使用 Claude Desktop</h3>
-    <p>打開 Claude Desktop，您會看到 MCP tool 已載入。</p>
-    <img src="https://i.imgur.com/pIV7xF4.jpeg" alt="Claude Desktop MCP工具載入圖示" style="max-width: 100%; margin: 10px 0;">
-    
-    <p>點擊 MCP tool，您將看到 gcp-auditmate-mcp-server 的功能資訊。</p>
-    <img src="https://i.imgur.com/yPnYCzv.jpeg" alt="gcp-auditmate-mcp-server功能資訊" style="max-width: 100%; margin: 10px 0;">
-    
-    <p>接著請他幫您進行 GCP 資源的自我查核。</p>
-    <img src="https://i.imgur.com/4mveLyz.jpeg" alt="GCP資源自我查核示例" style="max-width: 100%; margin: 10px 0;">
+      </div>
+      
+      <div class="instruction-step">
+        <h3>使用 Claude Desktop</h3>
+        <p>打開 Claude Desktop，您會看到 MCP tool 已載入。</p>
+        <img src="https://i.imgur.com/pIV7xF4.jpeg" alt="Claude Desktop MCP工具載入圖示">
+        
+        <p>點擊 MCP tool，您將看到 gcp-auditmate-mcp-server 的功能資訊。</p>
+        <img src="https://i.imgur.com/yPnYCzv.jpeg" alt="gcp-auditmate-mcp-server功能資訊">
+        
+        <p>接著請他幫您進行 GCP 資源的自我查核。</p>
+        <img src="https://i.imgur.com/4mveLyz.jpeg" alt="GCP資源自我查核示例">
+      </div>
+    </div>
   </div>
 </body>
 
