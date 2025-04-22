@@ -103,13 +103,6 @@ jobs:
                  -Dorg.apache.poi.ss.format.disable.color=true
           EOF
 
-      # 第5步: 準備和預熱 Gradle
-      - name: Prepare Gradle
-        run: |
-          ./gradlew clean
-          ./gradlew --stop
-          ./gradlew --status
-
       # 第6步: 構建原生執行檔
       # 使用 GraalVM 的 native-image 工具將 Java 應用程序編譯為特定平台的原生執行檔
       - name: Build Native Executable
