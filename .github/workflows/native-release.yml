@@ -281,7 +281,6 @@ jobs:
             combined_release/${{ env.INTEL_ARTIFACT }}.zip
             combined_release/${{ env.INTEL_ARTIFACT }}-bom.json
             combined_release/${{ env.INTEL_ARTIFACT }}-report.html
-            # ARM 文件已被移除，未來添加其他架構時可以擴展此處
 
   # 第三個任務: 部署 GitHub Pages
   # 此任務依賴於 create-release 任務完成
