@@ -88,6 +88,10 @@ graalvmNative {
 			buildArgs.add('--initialize-at-run-time=org.apache.poi.ooxml.POIXMLProperties')
 			buildArgs.add('--initialize-at-run-time=org.apache.poi.ooxml.POIXMLDocument')
 			buildArgs.add('--initialize-at-run-time=org.openxmlformats.schemas.officeDocument.x2006')
+			buildArgs.add('--initialize-at-run-time=org.apache.poi.ooxml')
+			buildArgs.add('--initialize-at-run-time=org.apache.xmlbeans')
+			buildArgs.add('--initialize-at-run-time=org.apache.poi.openxml4j')
+			buildArgs.add('--initialize-at-run-time=org.apache.poi.poifs')
 			
 			// 追蹤類初始化，有助於調試
 			buildArgs.add('--trace-class-initialization=java.awt.Toolkit,org.apache.poi.ss.format.CellFormatPart')

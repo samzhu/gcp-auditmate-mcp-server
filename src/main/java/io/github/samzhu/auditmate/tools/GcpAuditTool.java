@@ -67,6 +67,20 @@ public class GcpAuditTool {
             // 顯式加載POIXMLProperties與POIXMLDocument類以解決初始化問題
             Class.forName("org.apache.poi.ooxml.POIXMLProperties");
             Class.forName("org.apache.poi.ooxml.POIXMLDocument");
+            Class.forName("org.apache.poi.ooxml.POIXMLProperties$CoreProperties");
+            Class.forName("org.apache.poi.ooxml.POIXMLProperties$ExtendedProperties");
+            Class.forName("org.apache.poi.ooxml.POIXMLProperties$CustomProperties");
+            Class.forName("org.apache.xmlbeans.XmlObject");
+            Class.forName("org.apache.xmlbeans.impl.values.XmlObjectBase");
+            // 加載 OpenXML 文檔屬性相關類
+            Class.forName("org.openxmlformats.schemas.officeDocument.x2006.customProperties.CTProperties");
+            Class.forName("org.openxmlformats.schemas.officeDocument.x2006.customProperties.impl.CTPropertiesImpl");
+            Class.forName("org.openxmlformats.schemas.officeDocument.x2006.extendedProperties.CTProperties");
+            Class.forName("org.openxmlformats.schemas.officeDocument.x2006.extendedProperties.impl.CTPropertiesImpl");
+            Class.forName("org.openxmlformats.schemas.officeDocument.x2006.customProperties.PropertiesDocument");
+            Class.forName("org.openxmlformats.schemas.officeDocument.x2006.extendedProperties.PropertiesDocument");
+            Class.forName("org.openxmlformats.schemas.officeDocument.x2006.customProperties.impl.PropertiesDocumentImpl");
+            Class.forName("org.openxmlformats.schemas.officeDocument.x2006.extendedProperties.impl.PropertiesDocumentImpl");
             // 加載 CTWorkbook 相關類
             Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTWorkbook");
             Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTWorkbookImpl");

@@ -33,6 +33,39 @@
       },
       {
         "pattern": "\\QMETA-INF/services/org.apache.poi.ss.formula.udf.UDFFinder\\E"
+      },
+      {
+        "pattern": "\\Qorg/apache/poi/schemas/ooxml/system/ooxml/app.xsd\\E"
+      },
+      {
+        "pattern": "\\Qorg/apache/poi/schemas/ooxml/system/ooxml/core-properties.xsd\\E"
+      },
+      {
+        "pattern": "\\Qorg/apache/poi/schemas/ooxml/system/ooxml/custom-properties.xsd\\E"
+      },
+      {
+        "pattern": "\\Qorg/apache/poi/schemas/ooxml/system/ooxml/extended-properties.xsd\\E"
+      },
+      {
+        "pattern": "\\Qorg/apache/poi/schemas/ooxml/system/ooxml/docPropsVTypes.xsd\\E"
+      },
+      {
+        "pattern": "\\Qorg/apache/poi/poifs/property/DirectoryProperty.class\\E"
+      },
+      {
+        "pattern": "\\Qorg/apache/poi/ooxml/POIXMLProperties.class\\E"
+      },
+      {
+        "pattern": "\\Qorg/apache/poi/ooxml/POIXMLProperties$CoreProperties.class\\E"
+      },
+      {
+        "pattern": "\\Qorg/apache/poi/ooxml/POIXMLProperties$ExtendedProperties.class\\E"
+      },
+      {
+        "pattern": "\\Qorg/apache/poi/ooxml/POIXMLProperties$CustomProperties.class\\E"
+      },
+      {
+        "pattern": ".*\\.xsd"
       }
     ]
   },

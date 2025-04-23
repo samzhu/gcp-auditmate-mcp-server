@@ -71,6 +71,33 @@
     "allPublicConstructors": true
   },
   {
+    "name": "org.apache.poi.ooxml.POIXMLProperties$CoreProperties",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicFields": true,
+    "allPublicMethods": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "org.apache.poi.ooxml.POIXMLProperties$ExtendedProperties",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicFields": true,
+    "allPublicMethods": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "org.apache.poi.ooxml.POIXMLProperties$CustomProperties",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicFields": true,
+    "allPublicMethods": true,
+    "allPublicConstructors": true
+  },
+  {
     "name": "org.apache.poi.ooxml.POIXMLDocument",
     "allDeclaredFields": true,
     "allDeclaredMethods": true,
@@ -1275,5 +1302,62 @@
     "allDeclaredFields": true,
     "allDeclaredMethods": true,
     "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.apache.xmlbeans.impl.values.XmlObjectBase",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicFields": true,
+    "allPublicMethods": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "org.openxmlformats.schemas.officeDocument.x2006.customProperties.PropertiesDocument",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicFields": true,
+    "allPublicMethods": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "org.openxmlformats.schemas.officeDocument.x2006.extendedProperties.PropertiesDocument",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicFields": true,
+    "allPublicMethods": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "org.openxmlformats.schemas.officeDocument.x2006.customProperties.impl.PropertiesDocumentImpl",
+    "methods": [
+      {
+        "name": "<init>",
+        "parameterTypes": [
+          "org.apache.xmlbeans.SchemaType"
+        ]
+      }
+    ],
+    "allDeclaredFields": true,
+    "allPublicFields": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "org.openxmlformats.schemas.officeDocument.x2006.extendedProperties.impl.PropertiesDocumentImpl",
+    "methods": [
+      {
+        "name": "<init>",
+        "parameterTypes": [
+          "org.apache.xmlbeans.SchemaType"
+        ]
+      }
+    ],
+    "allDeclaredFields": true,
+    "allPublicFields": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true
   }
 ] 
