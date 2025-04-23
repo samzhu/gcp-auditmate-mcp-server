@@ -231,8 +231,9 @@ jobs:
             sbom/gcp-auditmate-mcp-server-report.html
           retention-days: 1
 
-      # 第6步: 下載所有構建產物
-      - name: Download all artifacts
+      # 第6步: 下載所有構建產物 (使用 v4 版本的新特性)
+      - name: Download artifacts
+        id: download
         uses: actions/download-artifact@v4
         with:
           path: release
@@ -247,19 +248,11 @@ jobs:
           echo "INTEL_ARTIFACT=gcp-auditmate-mcp-server-darwin-x86_64" >> $GITHUB_ENV
           echo "ARM_ARTIFACT=gcp-auditmate-mcp-server-darwin-aarch64" >> $GITHUB_ENV
       
-      # 第8步: 重新組織文件結構，準備發布
-      - name: Reorganize files
-        run: |
-          mkdir -p combined_release
-          cp release/${{ env.INTEL_ARTIFACT }}/${{ env.INTEL_ARTIFACT }} combined_release/
-          cp release/${{ env.INTEL_ARTIFACT }}/${{ env.INTEL_ARTIFACT }}.zip combined_release/
-          cp release/sbom-artifacts/gcp-auditmate-mcp-server-bom.json combined_release/${{ env.INTEL_ARTIFACT }}-bom.json
-          cp release/sbom-artifacts/gcp-auditmate-mcp-server-report.html combined_release/${{ env.INTEL_ARTIFACT }}-report.html
-
-      # 第9步: 準備 GitHub Pages 內容 (優化以避免不必要的 git clone)
+      # 第8步: 準備 GitHub Pages 內容 (優化以避免不必要的 git clone)
       - name: Prepare GitHub Pages content
         run: |
-          # 直接使用現有 checkout 的代碼，避免額外的 git clone
+          # 檢出代碼以獲取 site 目錄
+          git clone --depth 1 https://github.com/${{ github.repository }}.git tmp-repo
           mkdir -p pages-content
           cp -r tmp-repo/site/* pages-content/
           
@@ -277,13 +270,22 @@ jobs:
           </div>
           EOF
       
-      # 第10步: 上傳 GitHub Pages 內容
+      # 第9步: 上傳 GitHub Pages 內容
       - name: Upload GitHub Pages content
         uses: actions/upload-artifact@v4
         with:
           name: pages-content
           path: pages-content
           retention-days: 1
+
+      # 第10步: 重新組織文件結構，準備發布
+      - name: Reorganize files
+        run: |
+          mkdir -p combined_release
+          cp release/${{ env.INTEL_ARTIFACT }}/${{ env.INTEL_ARTIFACT }} combined_release/
+          cp release/${{ env.INTEL_ARTIFACT }}/${{ env.INTEL_ARTIFACT }}.zip combined_release/
+          cp release/sbom-artifacts/gcp-auditmate-mcp-server-bom.json combined_release/${{ env.INTEL_ARTIFACT }}-bom.json
+          cp release/sbom-artifacts/gcp-auditmate-mcp-server-report.html combined_release/${{ env.INTEL_ARTIFACT }}-report.html
 
       # 第11步: 創建 GitHub Release
       - name: Create Release
@@ -320,7 +322,7 @@ jobs:
     needs: create-release
     runs-on: ubuntu-latest
     steps:
-      # 第1步: 下載 GitHub Pages 內容
+      # 第1步: 下載 GitHub Pages 內容 (使用最新的 v4 版本)
       - name: Download GitHub Pages content
         uses: actions/download-artifact@v4
         with:
