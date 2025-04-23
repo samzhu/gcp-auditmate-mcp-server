@@ -153,7 +153,7 @@ jobs:
           echo "RELEASE_TAG=v20250421.1" >> $GITHUB_ENV
           echo "RELEASE_NAME=Release v20250421.1" >> $GITHUB_ENV
       
-      # 第9步: 準備發布文件
+      # 第9步: 準備發布文件 (只保留壓縮檔)
       - name: Prepare release files
         run: |
           mkdir -p release
@@ -162,15 +162,15 @@ jobs:
           cd release
           # 創建包含執行檔的 zip 壓縮包
           zip -r ${{ matrix.artifact_name }}.zip ${{ matrix.artifact_name }}
+          # 刪除原始執行檔，只保留 zip
+          rm ${{ matrix.artifact_name }}
       
-      # 第10步: 上傳構建產物 (設置較短的保留期限以節省空間)
+      # 第10步: 上傳構建產物 (只上傳壓縮檔，設置較短的保留期限以節省空間)
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact_name }}
-          path: |
-            release/${{ matrix.artifact_name }}
-            release/${{ matrix.artifact_name }}.zip
+          path: release/${{ matrix.artifact_name }}.zip
           retention-days: 1
 
   # 第二個任務: 創建 GitHub Release
@@ -260,15 +260,6 @@ jobs:
           mkdir -p pages-content/sbom
           cp release/sbom-artifacts/gcp-auditmate-mcp-server-report.html pages-content/sbom/index.html
           cp release/sbom-artifacts/gcp-auditmate-mcp-server-bom.json pages-content/sbom/sbom.json
-          
-          # 創建 SBOM 頁面連結
-          cat >> pages-content/index.html << EOF
-          
-          <div class="artifact">
-            <h2>軟件物料清單 (SBOM) 詳細報告</h2>
-            <p>查看完整的<a href="sbom/">互動式 SBOM 報告</a>，了解本應用程式的所有依賴組件、許可證和潛在漏洞。</p>
-          </div>
-          EOF
       
       # 第9步: 上傳 GitHub Pages 內容
       - name: Upload GitHub Pages content
@@ -278,11 +269,10 @@ jobs:
           path: pages-content
           retention-days: 1
 
-      # 第10步: 重新組織文件結構，準備發布
+      # 第10步: 重新組織文件結構，準備發布 (只處理壓縮檔)
       - name: Reorganize files
         run: |
           mkdir -p combined_release
-          cp release/${{ env.INTEL_ARTIFACT }}/${{ env.INTEL_ARTIFACT }} combined_release/
           cp release/${{ env.INTEL_ARTIFACT }}/${{ env.INTEL_ARTIFACT }}.zip combined_release/
           cp release/sbom-artifacts/gcp-auditmate-mcp-server-bom.json combined_release/${{ env.INTEL_ARTIFACT }}-bom.json
           cp release/sbom-artifacts/gcp-auditmate-mcp-server-report.html combined_release/${{ env.INTEL_ARTIFACT }}-report.html
@@ -297,8 +287,8 @@ jobs:
             GCP Auditmate MCP Server for Mac
             
             目前提供:
-            - Intel Mac (x86_64): ${{ env.INTEL_ARTIFACT }}
-            - ARM Mac (aarch64): ${{ env.ARM_ARTIFACT }}
+            - Intel Mac (x86_64): ${{ env.INTEL_ARTIFACT }}.zip
+            - ARM Mac (aarch64): ${{ env.ARM_ARTIFACT }}.zip
             
             SBOM (軟件物料清單) 文件提供以下格式:
             - JSON 格式的原始 SBOM 數據
@@ -311,7 +301,6 @@ jobs:
           draft: false  # 設為 true 可以創建草稿 release
           prerelease: false  # 設為 true 可以標記為預發布版本
           files: |
-            combined_release/${{ env.INTEL_ARTIFACT }}
             combined_release/${{ env.INTEL_ARTIFACT }}.zip
             combined_release/${{ env.INTEL_ARTIFACT }}-bom.json
             combined_release/${{ env.INTEL_ARTIFACT }}-report.html
@@ -334,9 +323,9 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: site  # 靜態網站內容所在的目錄
-          retention-days: 1  # 較短的保留期限以節省空間
+          # retention-days: 1  # 較短的保留期限以節省空間
 
       # 第3步: 部署到 GitHub Pages
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4 
+        uses: actions/deploy-pages@v4
