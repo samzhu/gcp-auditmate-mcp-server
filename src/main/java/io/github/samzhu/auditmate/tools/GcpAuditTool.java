@@ -64,6 +64,9 @@ public class GcpAuditTool {
             Class.forName("org.apache.poi.ss.formula.udf.DefaultUDFFinder");
             Class.forName("org.apache.poi.ss.formula.udf.AggregatingUDFFinder");
             Class.forName("org.apache.poi.xssf.usermodel.XSSFWorkbook");
+            // 顯式加載POIXMLProperties與POIXMLDocument類以解決初始化問題
+            Class.forName("org.apache.poi.ooxml.POIXMLProperties");
+            Class.forName("org.apache.poi.ooxml.POIXMLDocument");
             // 加載 CTWorkbook 相關類
             Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTWorkbook");
             Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTWorkbookImpl");

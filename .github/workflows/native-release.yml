@@ -93,6 +93,9 @@ jobs:
                  --initialize-at-run-time=org.apache.poi.util.ChainedProperties \\
                  --initialize-at-run-time=org.apache.poi.ss.util.SheetUtil \\
                  --initialize-at-run-time=org.apache.poi.util \\
+                 --initialize-at-run-time=org.apache.poi.ooxml.POIXMLProperties \\
+                 --initialize-at-run-time=org.apache.poi.ooxml.POIXMLDocument \\
+                 --initialize-at-run-time=org.openxmlformats.schemas.officeDocument.x2006 \\
                  --initialize-at-run-time=io.grpc \\
                  --trace-class-initialization=java.awt.Toolkit,org.apache.poi.ss.format.CellFormatPart \\
                  -H:EnableURLProtocols=http,https \\

@@ -85,6 +85,9 @@ graalvmNative {
 			buildArgs.add('--initialize-at-run-time=org.apache.poi.hpsf.PropertySet')
 			buildArgs.add('--initialize-at-run-time=org.apache.poi.util.ChainedProperties')
 			buildArgs.add('--initialize-at-run-time=org.apache.poi.ss.util.SheetUtil')
+			buildArgs.add('--initialize-at-run-time=org.apache.poi.ooxml.POIXMLProperties')
+			buildArgs.add('--initialize-at-run-time=org.apache.poi.ooxml.POIXMLDocument')
+			buildArgs.add('--initialize-at-run-time=org.openxmlformats.schemas.officeDocument.x2006')
 			
 			// 追蹤類初始化，有助於調試
 			buildArgs.add('--trace-class-initialization=java.awt.Toolkit,org.apache.poi.ss.format.CellFormatPart')
