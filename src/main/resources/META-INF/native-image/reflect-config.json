@@ -62,6 +62,15 @@
     "allDeclaredConstructors": true
   },
   {
+    "name": "org.apache.poi.ooxml.POIXMLProperties",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicFields": true,
+    "allPublicMethods": true,
+    "allPublicConstructors": true
+  },
+  {
     "name": "org.openxmlformats.schemas.spreadsheetml.x2006.main.CTWorkbookPr",
     "allDeclaredFields": true,
     "allDeclaredMethods": true,
@@ -1248,6 +1257,21 @@
   },
   {
     "name": "java.awt.Toolkit",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.apache.poi.ooxml.POIXMLProperties",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allPublicFields": true,
+    "allPublicMethods": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "org.apache.poi.util.RandomSingleton",
     "allDeclaredFields": true,
     "allDeclaredMethods": true,
     "allDeclaredConstructors": true
