@@ -255,8 +255,9 @@ jobs:
           body: |
             GCP Auditmate MCP Server for Mac
             
-            目前只提供:
+            目前提供:
             - Intel Mac (x86_64): ${{ env.INTEL_ARTIFACT }}
+            - ARM Mac (aarch64): ${{ env.ARM_ARTIFACT }}
             
             SBOM (軟件物料清單) 文件提供以下格式:
             - JSON 格式的原始 SBOM 數據
