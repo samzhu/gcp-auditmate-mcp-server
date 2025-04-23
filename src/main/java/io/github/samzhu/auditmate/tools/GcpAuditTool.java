@@ -58,6 +58,11 @@ public class GcpAuditTool {
     // 靜態初始化塊，確保 POI 相關類在使用前已初始化
     static {
         try {
+            // 設置系統屬性，禁用某些 XMLBeans 功能以避免 Native Image 問題
+            System.setProperty("org.apache.poi.javax.xml.stream.XMLInputFactory", "com.sun.xml.internal.stream.XMLInputFactoryImpl");
+            System.setProperty("POIXMLDocumentPart.read.contentTypes.validation", "false");
+            System.setProperty("org.apache.poi.ooxml.strict", "false");
+            
             // 初始化 POI 相關類
             Class.forName("org.apache.poi.ss.formula.udf.IndexedUDFFinder");
             Class.forName("org.apache.poi.ss.formula.udf.UDFFinder");

@@ -107,7 +107,10 @@ jobs:
                  -Djava.awt.headless=true \\
                  -Dapple.awt.headless=true \\
                  -Dorg.apache.poi.ss.disableAutoColumnWidth=true \\
-                 -Dorg.apache.poi.ss.format.disable.color=true
+                 -Dorg.apache.poi.ss.format.disable.color=true \\
+                 -Dorg.apache.poi.javax.xml.stream.XMLInputFactory=com.sun.xml.internal.stream.XMLInputFactoryImpl \\
+                 -DPOIXMLDocumentPart.read.contentTypes.validation=false \\
+                 -Dorg.apache.poi.ooxml.strict=false
           EOF
 
       # 第6步: 構建原生執行檔

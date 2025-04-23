@@ -110,6 +110,9 @@ graalvmNative {
 			buildArgs.add('-Dapple.awt.headless=true')
 			buildArgs.add('-Dorg.apache.poi.ss.disableAutoColumnWidth=true')
 			buildArgs.add('-Dorg.apache.poi.ss.format.disable.color=true')
+			buildArgs.add('-Dorg.apache.poi.javax.xml.stream.XMLInputFactory=com.sun.xml.internal.stream.XMLInputFactoryImpl')
+			buildArgs.add('-DPOIXMLDocumentPart.read.contentTypes.validation=false')
+			buildArgs.add('-Dorg.apache.poi.ooxml.strict=false')
 		}
 	}
 }

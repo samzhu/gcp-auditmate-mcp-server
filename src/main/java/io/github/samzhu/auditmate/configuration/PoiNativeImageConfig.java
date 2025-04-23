@@ -37,5 +37,10 @@ public class PoiNativeImageConfig {
         
         // 禁用 AWT
         System.setProperty("java.awt.headless", "true");
+        
+        // 禁用 XMLBeans 驗證，解決 Native Image 中 POIXMLProperties 初始化問題
+        System.setProperty("org.apache.poi.javax.xml.stream.XMLInputFactory", "com.sun.xml.internal.stream.XMLInputFactoryImpl");
+        System.setProperty("POIXMLDocumentPart.read.contentTypes.validation", "false");
+        System.setProperty("org.apache.poi.ooxml.strict", "false");
     }
 } 
