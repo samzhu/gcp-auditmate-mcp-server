@@ -1,6 +1,5 @@
 package io.github.samzhu.auditmate.tools;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -14,11 +13,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.poi.xssf.usermodel.XSSFCell;
-import org.apache.poi.xssf.usermodel.XSSFCellStyle;
-import org.apache.poi.xssf.usermodel.XSSFRow;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Component;
@@ -45,6 +44,7 @@ import com.google.cloud.resourcemanager.v3.ProjectsClient;
 import com.google.iam.v1.Policy;
 
 import io.github.samzhu.auditmate.dto.GcpAuditResult;
+import io.github.samzhu.auditmate.helper.PoiNativeImageHelper;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -317,7 +317,7 @@ public class GcpAuditTool {
      * 執行查核並生成報告
      */
     private void executeAudit(GcpAuditResult result, String projectId, String year, String quarter, GoogleCredentials credentials) throws Exception {
-        try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+        try (Workbook workbook = PoiNativeImageHelper.createWorkbook()) {
             // 進行 IAM 查核
             showIAM(workbook, projectId);
 
@@ -339,14 +339,16 @@ public class GcpAuditTool {
     /**
      * 儲存 Excel 工作簿到檔案系統
      */
-    private String saveWorkbookToFile(XSSFWorkbook workbook, String fileName) throws IOException {
+    private String saveWorkbookToFile(Workbook workbook, String fileName) throws IOException {
         // 嘗試寫入到家目錄
         try {
             File homeDir = new File(System.getProperty("user.home"));
             validateDirectory(homeDir);
             
             File outputFile = new File(homeDir, fileName);
-            writeWorkbookToFile(workbook, outputFile);
+            try (FileOutputStream fileOut = new FileOutputStream(outputFile)) {
+                PoiNativeImageHelper.writeWorkbook(workbook, fileOut);
+            }
             return outputFile.getAbsolutePath();
         } catch (IOException homeException) {
             // 家目錄寫入失敗，嘗試寫入到臨時目錄
@@ -356,7 +358,9 @@ public class GcpAuditTool {
                 validateDirectory(tempDir);
                 
                 File outputFile = new File(tempDir, fileName);
-                writeWorkbookToFile(workbook, outputFile);
+                try (FileOutputStream fileOut = new FileOutputStream(outputFile)) {
+                    PoiNativeImageHelper.writeWorkbook(workbook, fileOut);
+                }
                 return outputFile.getAbsolutePath();
             } catch (IOException tempException) {
                 // 如果檔案系統寫入都失敗，則返回 Base64 編碼字串
@@ -388,21 +392,10 @@ public class GcpAuditTool {
     }
 
     /**
-     * 將工作簿寫入檔案
-     */
-    private void writeWorkbookToFile(XSSFWorkbook workbook, File outputFile) throws IOException {
-        try (FileOutputStream fileOut = new FileOutputStream(outputFile)) {
-            workbook.write(fileOut);
-        }
-    }
-
-    /**
      * 創建 Base64 編碼的檔案內容
      */
-    private String createBase64EncodedFile(XSSFWorkbook workbook) throws IOException {
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        workbook.write(bos);
-        byte[] bytes = bos.toByteArray();
+    private String createBase64EncodedFile(Workbook workbook) throws IOException {
+        byte[] bytes = PoiNativeImageHelper.workbookToBytes(workbook);
         String base64Content = Base64.getEncoder().encodeToString(bytes);
         return "data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64," + base64Content;
     }
@@ -509,8 +502,8 @@ public class GcpAuditTool {
     /**
      * 查詢並記錄防火牆規則
      */
-    private void inventoryFirewallRules(XSSFWorkbook workbook, String projectId) throws Exception {
-        XSSFSheet sheet = workbook.createSheet("Network Rules");
+    private void inventoryFirewallRules(Workbook workbook, String projectId) throws Exception {
+        Sheet sheet = workbook.createSheet("Network Rules");
         setupFirewallSheetHeader(sheet);
 
         try (FirewallsClient firewallsClient = FirewallsClient.create()) {
@@ -523,7 +516,7 @@ public class GcpAuditTool {
 
             for (Firewall firewall : firewallsClient.list(listFirewallsRequest).iterateAll()) {
                 hasRules = true;
-                XSSFRow row = sheet.createRow(rowNum++);
+                Row row = sheet.createRow(rowNum++);
                 populateFirewallRow(row, firewall);
             }
 
@@ -539,8 +532,8 @@ public class GcpAuditTool {
     /**
      * 設置防火牆表格標題
      */
-    private void setupFirewallSheetHeader(XSSFSheet sheet) {
-        XSSFRow headerRow = sheet.createRow(0);
+    private void setupFirewallSheetHeader(Sheet sheet) {
+        Row headerRow = sheet.createRow(0);
         headerRow.createCell(0).setCellValue("Direction");
         headerRow.createCell(1).setCellValue("Source Ranges");
         headerRow.createCell(2).setCellValue("Destination Ranges");
@@ -557,7 +550,7 @@ public class GcpAuditTool {
     /**
      * 填充防火牆規則行
      */
-    private void populateFirewallRow(XSSFRow row, Firewall firewall) {
+    private void populateFirewallRow(Row row, Firewall firewall) {
         row.createCell(0).setCellValue(firewall.getDirection().toString());
         row.createCell(1).setCellValue(String.join(", ", firewall.getSourceRangesList()));
         row.createCell(2).setCellValue(String.join(", ", firewall.getDestinationRangesList()));
@@ -568,8 +561,8 @@ public class GcpAuditTool {
     /**
      * 創建空的防火牆規則行
      */
-    private void createEmptyFirewallRow(XSSFSheet sheet) {
-        XSSFRow row = sheet.createRow(1);
+    private void createEmptyFirewallRow(Sheet sheet) {
+        Row row = sheet.createRow(1);
         row.createCell(0).setCellValue("無");
         row.createCell(1).setCellValue("無");
         row.createCell(2).setCellValue("無");
@@ -580,8 +573,8 @@ public class GcpAuditTool {
     /**
      * 查詢並記錄自攜金鑰(BYOK)
      */
-    private void showBYOK(XSSFWorkbook workbook, String projectId) throws IOException {
-        XSSFSheet sheet = workbook.createSheet("BYOK");
+    private void showBYOK(Workbook workbook, String projectId) throws IOException {
+        Sheet sheet = workbook.createSheet("BYOK");
         setupBYOKSheetHeader(sheet);
 
         if (!isKmsApiEnabled(projectId)) {
@@ -609,7 +602,7 @@ public class GcpAuditTool {
                 createEmptyBYOKRow(sheet);
             }
         } catch (com.google.api.gax.rpc.PermissionDeniedException e) {
-            XSSFRow row = sheet.createRow(1);
+            Row row = sheet.createRow(1);
             row.createCell(0).setCellValue("權限不足，無法存取 Cloud KMS 服務");
             row.createCell(1).setCellValue("無");
             row.createCell(2).setCellValue("無");
@@ -621,8 +614,8 @@ public class GcpAuditTool {
     /**
      * 設置 BYOK 表格標題
      */
-    private void setupBYOKSheetHeader(XSSFSheet sheet) {
-        XSSFRow headerRow = sheet.createRow(0);
+    private void setupBYOKSheetHeader(Sheet sheet) {
+        Row headerRow = sheet.createRow(0);
         headerRow.createCell(0).setCellValue("Key Name");
         headerRow.createCell(1).setCellValue("Type (ex. RSA-2048)");
         headerRow.createCell(2).setCellValue("Lifecycle");
@@ -638,7 +631,7 @@ public class GcpAuditTool {
      * 處理特定位置的金鑰
      */
     private boolean processKeysInLocation(KeyManagementServiceClient client, String projectId, 
-            String locationId, XSSFSheet sheet, int rowNum, boolean hasImportedKeys) {
+            String locationId, Sheet sheet, int rowNum, boolean hasImportedKeys) {
         
         ListKeyRingsRequest listKeyRingsRequest = ListKeyRingsRequest.newBuilder()
                 .setParent(String.format("projects/%s/locations/%s", projectId, locationId))
@@ -655,7 +648,7 @@ public class GcpAuditTool {
      * 處理特定金鑰環中的金鑰
      */
     private boolean processKeysInKeyRing(KeyManagementServiceClient client, 
-            KeyRing keyRing, XSSFSheet sheet, int rowNum, boolean hasImportedKeys) {
+            KeyRing keyRing, Sheet sheet, int rowNum, boolean hasImportedKeys) {
         
         ListCryptoKeysRequest listCryptoKeysRequest = ListCryptoKeysRequest.newBuilder()
                 .setParent(keyRing.getName())
@@ -664,7 +657,7 @@ public class GcpAuditTool {
         for (CryptoKey cryptoKey : client.listCryptoKeys(listCryptoKeysRequest).iterateAll()) {
             if (cryptoKey.getImportOnly()) {
                 hasImportedKeys = true;
-                XSSFRow row = sheet.createRow(rowNum);
+                Row row = sheet.createRow(rowNum);
                 row.createCell(0).setCellValue(cryptoKey.getName());
                 row.createCell(1).setCellValue(cryptoKey.getPurpose().toString());
                 row.createCell(2).setCellValue(getKeyLifecycle(client, cryptoKey));
@@ -678,8 +671,8 @@ public class GcpAuditTool {
     /**
      * 創建空的 BYOK 行
      */
-    private void createEmptyBYOKRow(XSSFSheet sheet) {
-        XSSFRow row = sheet.createRow(1);
+    private void createEmptyBYOKRow(Sheet sheet) {
+        Row row = sheet.createRow(1);
         row.createCell(0).setCellValue("無");
         row.createCell(1).setCellValue("無");
         row.createCell(2).setCellValue("無");
@@ -689,8 +682,8 @@ public class GcpAuditTool {
     /**
      * 查詢並記錄 IAM 權限
      */
-    private void showIAM(XSSFWorkbook workbook, String projectId) throws IOException {
-        XSSFSheet sheet = workbook.createSheet("IAM");
+    private void showIAM(Workbook workbook, String projectId) throws IOException {
+        Sheet sheet = workbook.createSheet("IAM");
         setupIAMSheetHeader(sheet);
 
         try (ProjectsClient projectsClient = ProjectsClient.create()) {
@@ -700,7 +693,7 @@ public class GcpAuditTool {
             Map<String, IAM> iamMap = generateIAMMap(policy);
             populateIAMSheet(sheet, new ArrayList<>(iamMap.values()), workbook);
         } catch (Exception e) {
-            XSSFRow row = sheet.createRow(1);
+            Row row = sheet.createRow(1);
             row.createCell(0).setCellValue("無法取得 IAM 權限資訊");
             row.createCell(1).setCellValue("無");
             throw new IOException("無法取得 IAM 權限資訊: " + e.getMessage(), e);
@@ -710,8 +703,8 @@ public class GcpAuditTool {
     /**
      * 設置 IAM 表格標題
      */
-    private void setupIAMSheetHeader(XSSFSheet sheet) {
-        XSSFRow headerRow = sheet.createRow(0);
+    private void setupIAMSheetHeader(Sheet sheet) {
+        Row headerRow = sheet.createRow(0);
         headerRow.createCell(0).setCellValue("User/Group");
         headerRow.createCell(1).setCellValue("Permissions");
 
@@ -739,22 +732,22 @@ public class GcpAuditTool {
     /**
      * 填充 IAM 表格
      */
-    private void populateIAMSheet(XSSFSheet sheet, List<IAM> iamList, XSSFWorkbook workbook) {
+    private void populateIAMSheet(Sheet sheet, List<IAM> iamList, Workbook workbook) {
         int rowNum = 1;
         for (IAM iam : iamList) {
             if (iam.getName().startsWith("user") || iam.getName().startsWith("group")) {
-                XSSFRow row = sheet.createRow(rowNum++);
+                Row row = sheet.createRow(rowNum++);
                 row.createCell(0).setCellValue(iam.getName());
                 row.createCell(1).setCellValue(String.join("\n", iam.getRoles()));
             }
         }
 
-        XSSFCellStyle wrapStyle = workbook.createCellStyle();
+        CellStyle wrapStyle = workbook.createCellStyle();
         wrapStyle.setWrapText(true);
         for (int i = 1; i < rowNum; i++) {
-            XSSFRow row = sheet.getRow(i);
+            Row row = sheet.getRow(i);
             if (row != null) {
-                XSSFCell cell = row.getCell(1);
+                Cell cell = row.getCell(1);
                 if (cell != null) {
                     cell.setCellStyle(wrapStyle);
                 }
