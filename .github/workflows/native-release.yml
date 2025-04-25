@@ -27,7 +27,7 @@ jobs:
             runner: macos-13  # 使用 macOS 13 (Intel) 的運行環境
             target_platform: darwin-x86_64  # GraalVM 目標平台
             artifact_name: gcp-auditmate-mcp-server-darwin-x86_64  # 產物命名與 target_platform 一致
-            memory_options: "-"
+            memory_options: ""
             build_options: ""
           # ARM 設置
           - arch: arm
