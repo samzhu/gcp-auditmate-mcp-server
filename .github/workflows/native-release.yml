@@ -20,7 +20,7 @@ jobs:
     # 矩陣策略設置: 同時構建 Intel 和 ARM 版本
     strategy:
       matrix:
-        arch: [intel, arm]  # 目前只定義 Intel 架構，未來可以添加其他架構
+        arch: [intel]  # 目前只定義 Intel 架構，未來可以添加其他架構
         include:
           # Intel 設置
           - arch: intel
