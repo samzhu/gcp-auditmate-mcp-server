@@ -232,7 +232,7 @@ jobs:
             - JSON 格式的原始 SBOM 數據
             - HTML 報告 (由 CycloneDX Sunshine 生成)，包含可視化的依賴關係、漏洞和許可證信息
             
-            查看完整的[互動式 SBOM 報告](https://github-samzhu.github.io/gcp-auditmate-mcp-server/sbom/)
+            查看完整的[互動式 SBOM 報告](https://samzhu.github.io/gcp-auditmate-mcp-server/sbom/)
             
             Built on: ${{ github.event.repository.updated_at }}
             Commit: ${{ github.sha }}
