@@ -19,14 +19,24 @@
       --primary-700: #FF9F00;
       --primary-100: #FFFAC2;
       --primary-50: #FFFEF0;
+      --shadow-xs: 1px 1px 0 0 #000;
+      --shadow-sm: 2px 2px 0 0 #000;
+      --shadow-md: 3px 3px 0 0 #000;
+      --shadow-lg: 5px 5px 0 0 #000;
+      --shadow-xl: 8px 8px 0 0 #000;
+      --border-width: 3px;
     }
     
     body {
       font-family: var(--font-sans);
-      max-width: 800px;
+      max-width: 850px;
       margin: 0 auto;
       padding: 20px;
       background-color: var(--primary-50);
+      background-image: 
+        linear-gradient(rgba(255, 204, 0, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 204, 0, 0.05) 1px, transparent 1px);
+      background-size: 20px 20px;
       line-height: 1.6;
       color: #000;
     }
@@ -41,7 +51,7 @@
 
     h1 {
       font-size: 2.5rem;
-      border-bottom: 3px solid #000;
+      border-bottom: var(--border-width) solid #000;
       padding-bottom: 10px;
       position: relative;
       display: inline-block;
@@ -53,7 +63,7 @@
       bottom: -8px;
       left: 0;
       width: 100%;
-      height: 3px;
+      height: var(--border-width);
       background-color: var(--primary-500);
     }
 
@@ -62,11 +72,20 @@
       position: relative;
       margin-bottom: 1em;
       margin-top: 1.2em;
+      display: inline-block;
+      padding: 0 10px;
+      background-color: var(--primary-500);
+      box-shadow: var(--shadow-xs);
+      border: 2px solid #000;
+      transform: rotate(-1deg);
     }
     
     h3 {
       font-size: 1.4rem;
       margin-top: 1.2em;
+      display: inline-block;
+      padding: 0 8px;
+      border-bottom: 2px solid #000;
     }
 
     a {
@@ -74,25 +93,31 @@
       text-decoration: none;
       font-weight: bold;
       position: relative;
-      padding: 0 2px;
+      padding: 0 4px;
       background-color: var(--primary-500);
-      box-shadow: 1px 1px 0 0 #000;
+      box-shadow: var(--shadow-xs);
       transition: all 0.2s ease;
+      display: inline-block;
     }
 
     a:hover {
-      transform: translate(-1px, -1px);
-      box-shadow: 3px 3px 0 0 #000;
+      transform: translate(-2px, -2px);
+      box-shadow: var(--shadow-md);
     }
 
     .artifact {
-      margin-bottom: 25px;
+      margin-bottom: 30px;
       padding: 20px;
-      border: 3px solid #000;
+      border: var(--border-width) solid #000;
       background-color: white;
-      box-shadow: 5px 5px 0 0 #000;
+      box-shadow: var(--shadow-lg);
       position: relative;
       overflow: hidden;
+      transform: rotate(0.5deg);
+    }
+    
+    .artifact:nth-child(even) {
+      transform: rotate(-0.5deg);
     }
     
     .artifact:before {
@@ -101,7 +126,7 @@
       top: 0;
       right: 0;
       border-style: solid;
-      border-width: 0 25px 25px 0;
+      border-width: 0 30px 30px 0;
       border-color: transparent var(--primary-500) transparent transparent;
     }
 
@@ -111,8 +136,9 @@
       font-family: monospace;
       padding: 15px;
       overflow-x: auto;
-      box-shadow: 3px 3px 0 0 var(--primary-700);
-      border: 1px solid var(--primary-700);
+      box-shadow: var(--shadow-md);
+      border: 2px solid var(--primary-700);
+      border-radius: 0;
     }
 
     code {
@@ -122,41 +148,55 @@
     }
 
     ul {
-      list-style-type: square;
+      list-style-type: none;
+      padding-left: 20px;
     }
-
-    li {
-      margin-bottom: 8px;
+    
+    ul li {
+      margin-bottom: 12px;
+      position: relative;
+    }
+    
+    ul li:before {
+      content: "►";
+      color: var(--primary-700);
+      font-weight: bold;
+      display: inline-block;
+      width: 1em;
+      margin-left: -1em;
     }
 
     img {
       max-width: 100%;
-      border: 3px solid #000;
-      box-shadow: 5px 5px 0 0 #000;
+      border: var(--border-width) solid #000;
+      box-shadow: var(--shadow-lg);
       margin: 15px 0;
       display: block;
+      transform: rotate(0.8deg);
     }
 
     .btn {
       display: inline-block;
       font-family: var(--font-head);
-      padding: 8px 16px;
+      padding: 8px 20px;
       margin: 5px 0;
       background-color: var(--primary-500);
-      border: 3px solid #000;
-      box-shadow: 3px 3px 0 0 #000;
+      border: var(--border-width) solid #000;
+      box-shadow: var(--shadow-md);
       text-transform: uppercase;
       transition: all 0.2s ease;
+      cursor: pointer;
     }
 
     .btn:hover {
       transform: translate(-2px, -2px);
-      box-shadow: 5px 5px 0 0 #000;
+      box-shadow: var(--shadow-lg);
     }
     
     strong {
       background-color: var(--primary-100);
       padding: 0 3px;
+      font-weight: bold;
     }
     
     .container {
@@ -166,12 +206,30 @@
     
     .header {
       text-align: center;
-      margin-bottom: 30px;
+      margin-bottom: 40px;
+      position: relative;
+      padding: 20px;
+      border: var(--border-width) solid #000;
+      background-color: white;
+      box-shadow: var(--shadow-lg);
+    }
+    
+    .header:before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 10px;
+      background-color: var(--primary-500);
     }
     
     .instruction-step {
       counter-increment: step-counter;
       position: relative;
+      margin-bottom: 30px;
+      padding-left: 15px;
+      border-left: 3px solid var(--primary-500);
     }
     
     .instruction-step h3:before {
@@ -181,44 +239,114 @@
       font-size: 0.8em;
       color: var(--primary-700);
     }
+    
+    .github-corner {
+      position: absolute;
+      top: 0;
+      right: 0;
+      border: 0;
+      width: 80px;
+      height: 80px;
+    }
+    
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      background-color: var(--primary-100);
+      border: 2px solid #000;
+      box-shadow: var(--shadow-xs);
+      margin-right: 8px;
+      font-size: 0.9em;
+      transform: rotate(-1deg);
+    }
+    
+    .hero-text {
+      font-size: 1.5rem;
+      margin: 20px 0;
+      text-align: center;
+      line-height: 1.4;
+    }
+    
+    .hero-text span {
+      background-color: var(--primary-500);
+      padding: 0 5px;
+      box-shadow: var(--shadow-xs);
+    }
+    
+    .divider {
+      height: 4px;
+      background-color: #000;
+      margin: 30px 0;
+      position: relative;
+    }
+    
+    .divider:before {
+      content: "";
+      height: 4px;
+      width: 40%;
+      background-color: var(--primary-500);
+      position: absolute;
+      left: 30%;
+    }
   </style>
 </head>
 
 <body>
+  <a href="https://github.com/samzhu/gcp-auditmate-mcp-server" class="github-corner" aria-label="在 GitHub 上查看源碼">
+    <svg width="120" height="120" viewBox="0 0 250 250" style="color:#151513; position: absolute; top: 0; right: 0; border: 0;" aria-hidden="true">
+      <path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path>
+      <path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path>
+    </svg>
+  </a>
   <div class="container">
     <div class="header">
-      <h1>GCP AuditMate MCP 伺服器</h1>
-      <p>最新的原生二進制檔案可以從 <a href="https://github.com/samzhu/gcp-auditmate-mcp-server/releases">GitHub Releases</a> 頁面下載。</p>
+      <h1>GCP AuditMate MCP Server</h1>
+      <p class="hero-text">專為 <span>Google Cloud Platform</span> 設計的自助式審核工具<br/>
+        由 <span>Model Completion Protocol (MCP)</span> 技術實現</p>
+      <p>最新的原生二進位檔案可以從 <a href="https://github.com/samzhu/gcp-auditmate-mcp-server/releases">GitHub Releases</a> 頁面下載。</p>
+      <div style="margin-top: 20px;">
+        <a href="https://github.com/samzhu/gcp-auditmate-mcp-server" class="btn">GitHub 專案</a>
+      </div>
     </div>
     
+    <div class="divider"></div>
+    
+    <h2>下載選項</h2>
     <div class="artifact">
-      <h2>macOS 版本 (Intel 晶片)</h2>
+      <span class="badge">macOS</span>
+      <span class="badge">Intel</span>
+      <h3>macOS 版本 (Intel 晶片)</h3>
       <p>適用於 Intel 處理器的 Mac 電腦。</p>
       <p>請前往 <a href="https://github.com/samzhu/gcp-auditmate-mcp-server/releases">GitHub Releases</a> 頁面，下載以下檔案：</p>
       <ul>
-        <li><code>gcp-auditmate-mcp-server-darwin-x86_64.zip</code> (壓縮包)</li>
+        <li><code>gcp-auditmate-mcp-server-darwin-x86_64.zip</code> (壓縮檔)</li>
       </ul>
     </div>
     
     <div class="artifact">
-      <h2>macOS 版本 (Apple Silicon/ARM 晶片)</h2>
+      <span class="badge">macOS</span>
+      <span class="badge">Apple Silicon</span>
+      <h3>macOS 版本 (Apple Silicon/ARM 晶片)</h3>
       <p>適用於 M1、M2、M3 等 Apple Silicon 晶片的 Mac 電腦。</p>
       <p>請前往 <a href="https://github.com/samzhu/gcp-auditmate-mcp-server/releases">GitHub Releases</a> 頁面，下載以下檔案：</p>
       <ul>
-        <li><code>gcp-auditmate-mcp-server-darwin-aarch64.zip</code> (壓縮包)</li>
+        <li><code>gcp-auditmate-mcp-server-darwin-aarch64.zip</code> (壓縮檔)</li>
       </ul>
     </div>
     
     <div class="artifact">
-      <h2>軟件物料清單 (SBOM)</h2>
-      <p>我們提供本應用程式的軟件物料清單 (SBOM)，列出所有依賴組件及其版本資訊，有助於了解軟件組成、識別潛在安全風險及遵循開源許可證要求。</p>
+      <span class="badge">SBOM</span>
+      <h3>軟體元件清單 (SBOM)</h3>
+      <p>我們提供本應用程式的軟體元件清單 (SBOM)，列出所有依賴元件及其版本資訊，有助於了解軟體組成、識別潛在安全風險及遵循開源授權條款要求。</p>
       <p>您可以透過以下方式獲取最新版本的 SBOM：</p>
       <ul>
         <li><a href="https://github.com/samzhu/gcp-auditmate-mcp-server/releases/latest/download/gcp-auditmate-mcp-server-darwin-x86_64-bom.json">下載 JSON 格式</a> - 適合機器讀取和進一步處理</li>
-        <li><a href="sbom/">查看互動式 HTML 報告</a> - 提供直觀的視覺化界面，展示依賴關係、許可證分佈和潛在漏洞</li>
+        <li><a href="sbom/">查看互動性 HTML 報表</a> - 提供直觀的視覺化介面，展示依賴關係、授權條款分佈和潛在漏洞</li>
       </ul>
-      <p><strong>提示：</strong>HTML 報告由 CycloneDX Sunshine 工具生成，包含互動式的圖表和表格，是了解軟件依賴結構的最佳方式。</p>
+      <p><strong>提示：</strong>HTML 報表由 CycloneDX Sunshine 工具產生，包含互動性的圖表和表格，是了解軟體依賴結構的最佳方式。</p>
     </div>
+    
+    <div class="divider"></div>
     
     <h2>使用說明</h2>
     <div class="artifact">
@@ -242,7 +370,7 @@ xattr -cr gcp-auditmate-mcp-server-darwin-aarch64</pre>
 
         <p><strong>指令說明：</strong></p>
         <ul>
-          <li><code>chmod +x</code>：賦予檔案執行權限，允許檔案作為程式運行</li>
+          <li><code>chmod +x</code>：賦予檔案執行權限，允許檔案作為程式執行</li>
           <li><code>xattr -cr</code>：移除 macOS 對從網路下載檔案施加的隔離屬性和安全限制，解決「來自未識別的開發者」的警告問題</li>
         </ul>
       </div>
@@ -287,7 +415,32 @@ xattr -cr gcp-auditmate-mcp-server-darwin-aarch64</pre>
         <p>接下來稍等一會查核檔案就會產生了。</p>
       </div>
     </div>
+    
+    <div class="divider"></div>
+    
+    <footer style="text-align: center; margin-top: 40px; margin-bottom: 20px;">
+      <p>© 2025 GCP AuditMate MCP 伺服器 | <a href="https://github.com/samzhu/gcp-auditmate-mcp-server">GitHub</a></p>
+    </footer>
   </div>
+  
+  <style>
+    .github-corner:hover .octo-arm {
+      animation: octocat-wave 560ms ease-in-out;
+    }
+    @keyframes octocat-wave {
+      0%, 100% { transform: rotate(0) }
+      20%, 60% { transform: rotate(-25deg) }
+      40%, 80% { transform: rotate(10deg) }
+    }
+    @media (max-width:500px) {
+      .github-corner:hover .octo-arm {
+        animation: none;
+      }
+      .github-corner .octo-arm {
+        animation: octocat-wave 560ms ease-in-out;
+      }
+    }
+  </style>
 </body>
 
 </html>
