@@ -30,12 +30,12 @@ jobs:
             memory_options: ""
             build_options: ""
           # ARM 設置
-          - arch: arm
-            runner: macos-latest  # 使用 macOS-latest (ARM 架構，僅 7GB 記憶體)
-            target_platform: darwin-aarch64  # GraalVM 目標平台
-            artifact_name: gcp-auditmate-mcp-server-darwin-aarch64  # 產物命名與 target_platform 一致
-            memory_options: ""
-            build_options: ""
+          # - arch: arm
+          #   runner: macos-latest  # 使用 macOS-latest (ARM 架構，僅 7GB 記憶體)
+          #   target_platform: darwin-aarch64  # GraalVM 目標平台
+          #   artifact_name: gcp-auditmate-mcp-server-darwin-aarch64  # 產物命名與 target_platform 一致
+          #   memory_options: ""
+          #   build_options: ""
 
     # 根據矩陣變量選擇對應的運行環境
     runs-on: ${{ matrix.runner }}
