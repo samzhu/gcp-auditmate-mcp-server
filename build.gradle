@@ -39,11 +39,9 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	
-	// Apache POI
-	implementation 'org.apache.poi:poi:5.4.1'
-	implementation 'org.apache.poi:poi-ooxml:5.4.1'
-	implementation 'org.apache.poi:poi-ooxml-full:5.4.1'
-	implementation 'org.apache.xmlbeans:xmlbeans:5.3.0'
+	// Fastexcel (替代 Apache POI)
+	implementation 'org.dhatim:fastexcel:0.19.0'
+	implementation 'org.dhatim:fastexcel-reader:0.19.0'
 	
 	// GCP
 	implementation 'com.google.cloud:google-cloud-resourcemanager:1.62.0'                        // https://central.sonatype.com/artifact/com.google.cloud/google-cloud-resourcemanager
@@ -65,54 +63,3 @@ tasks.named('test') {
 	useJUnitPlatform()
 }
 
-// GraalVM 原生映像配置，主要針對 Apache POI
-
-graalvmNative {
-	binaries {
-		main {
-			jvmArgs = ['-Xmx12g', '-XX:MaxMetaspaceSize=1g']
-			
-			// 明確指定不應該在構建時初始化的類
-			buildArgs.add('--initialize-at-run-time=java.awt.Toolkit')
-			buildArgs.add('--initialize-at-run-time=org.apache.poi.ss.format.CellFormatPart')
-			buildArgs.add('--initialize-at-run-time=java.awt')
-			buildArgs.add('--initialize-at-run-time=sun.awt')
-			buildArgs.add('--initialize-at-run-time=sun.font')
-			buildArgs.add('--initialize-at-run-time=sun.java2d')
-			buildArgs.add('--initialize-at-run-time=sun.font.FontDesignMetrics')
-			buildArgs.add('--initialize-at-run-time=java.awt.image,java.lang.Math.PowCache')
-			buildArgs.add('--initialize-at-run-time=org.apache.poi.util.RandomSingleton')
-			buildArgs.add('--initialize-at-run-time=org.apache.poi.hpsf.PropertySet')
-			buildArgs.add('--initialize-at-run-time=org.apache.poi.util.ChainedProperties')
-			buildArgs.add('--initialize-at-run-time=org.apache.poi.ss.util.SheetUtil')
-			buildArgs.add('--initialize-at-run-time=org.apache.poi.ooxml.POIXMLProperties')
-			buildArgs.add('--initialize-at-run-time=org.apache.poi.ooxml.POIXMLDocument')
-			buildArgs.add('--initialize-at-run-time=org.openxmlformats.schemas.officeDocument.x2006')
-			buildArgs.add('--initialize-at-run-time=org.apache.poi.ooxml')
-			buildArgs.add('--initialize-at-run-time=org.apache.xmlbeans')
-			buildArgs.add('--initialize-at-run-time=org.apache.poi.openxml4j')
-			buildArgs.add('--initialize-at-run-time=org.apache.poi.poifs')
-			
-			// 追蹤類初始化，有助於調試
-			buildArgs.add('--trace-class-initialization=java.awt.Toolkit,org.apache.poi.ss.format.CellFormatPart')
-			
-			// 配置文件
-			buildArgs.add('-H:ReflectionConfigurationResources=META-INF/native-image/reflect-config.json')
-			buildArgs.add('-H:ResourceConfigurationResources=META-INF/native-image/resource-config.json')
-			
-			// 實驗性選項和特性
-			buildArgs.add('-H:+ReportExceptionStackTraces')
-			buildArgs.add('-H:+UnlockExperimentalVMOptions')
-			buildArgs.add('-H:EnableURLProtocols=http,https')
-			
-			// 系統屬性設置
-			buildArgs.add('-Djava.awt.headless=true')
-			buildArgs.add('-Dapple.awt.headless=true')
-			buildArgs.add('-Dorg.apache.poi.ss.disableAutoColumnWidth=true')
-			buildArgs.add('-Dorg.apache.poi.ss.format.disable.color=true')
-			buildArgs.add('-Dorg.apache.poi.javax.xml.stream.XMLInputFactory=com.sun.xml.internal.stream.XMLInputFactoryImpl')
-			buildArgs.add('-DPOIXMLDocumentPart.read.contentTypes.validation=false')
-			buildArgs.add('-Dorg.apache.poi.ooxml.strict=false')
-		}
-	}
-}

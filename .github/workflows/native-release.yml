@@ -20,22 +20,22 @@ jobs:
     # 矩陣策略設置: 同時構建 Intel 和 ARM 版本
     strategy:
       matrix:
-        arch: [intel]  # 目前只定義 Intel 架構，未來可以添加其他架構
+        arch: [intel, arm]  # 目前只定義 Intel 架構，未來可以添加其他架構
         include:
           # Intel 設置
           - arch: intel
             runner: macos-13  # 使用 macOS 13 (Intel) 的運行環境
             target_platform: darwin-x86_64  # GraalVM 目標平台
             artifact_name: gcp-auditmate-mcp-server-darwin-x86_64  # 產物命名與 target_platform 一致
-            memory_options: "-Xmx12g -XX:MaxMetaspaceSize=1g"
+            memory_options: "-"
             build_options: ""
           # ARM 設置
-          # - arch: arm
-          #   runner: macos-latest  # 使用 macOS-latest (ARM 架構，僅 7GB 記憶體)
-          #   target_platform: darwin-aarch64  # GraalVM 目標平台
-          #   artifact_name: gcp-auditmate-mcp-server-darwin-aarch64  # 產物命名與 target_platform 一致
-          #   memory_options: "-Xmx5g -XX:MaxMetaspaceSize=512m"
-          #   build_options: "-H:+PrintAnalysisCallTree -H:+PrintImageHeapPartitionSizes --no-fallback"
+          - arch: arm
+            runner: macos-latest  # 使用 macOS-latest (ARM 架構，僅 7GB 記憶體)
+            target_platform: darwin-aarch64  # GraalVM 目標平台
+            artifact_name: gcp-auditmate-mcp-server-darwin-aarch64  # 產物命名與 target_platform 一致
+            memory_options: ""
+            build_options: ""
 
     # 根據矩陣變量選擇對應的運行環境
     runs-on: ${{ matrix.runner }}
@@ -71,68 +71,6 @@ jobs:
           path: build/native
           key: ${{ runner.os }}-graalvm-native-${{ github.sha }}
           restore-keys: ${{ runner.os }}-graalvm-native-
-
-      # 第3步: 釋放系統資源
-      - name: Free System Resources for ARM build
-        if: matrix.arch == 'arm'
-        run: |
-          echo "Available memory before cleanup:"
-          vm_stat || top -l 1 | grep PhysMem
-          echo "釋放 macOS 上的記憶體"
-          sudo purge
-          echo "Available memory after cleanup:"
-          vm_stat || top -l 1 | grep PhysMem
-          echo "停止不必要的服務"
-          brew services list || true
-          echo "顯示環境信息"
-          java -version
-          echo "Processor info:"
-          sysctl -n machdep.cpu.brand_string || system_profiler SPHardwareDataType | grep Chip
-
-      # 第4步: 創建 GraalVM 配置文件
-      # 這些配置對於正確構建原生執行檔非常重要，特別是針對使用到 AWT/Java2D 等需要特殊處理的功能
-      - name: Create GraalVM Configuration Files
-        run: |
-          mkdir -p src/main/resources/META-INF/native-image
-          
-          echo "創建 native-image.properties 配置文件"
-          cat > src/main/resources/META-INF/native-image/native-image.properties << EOF
-          Args = -H:+UnlockExperimentalVMOptions \\
-                 -H:+ReportExceptionStackTraces \\
-                 -H:+AllowDeprecatedInitializeAllClassesAtBuildTime \\
-                 --initialize-at-run-time=java.awt.Toolkit \\
-                 --initialize-at-run-time=org.apache.poi.ss.format.CellFormatPart \\
-                 --initialize-at-run-time=java.awt \\
-                 --initialize-at-run-time=sun.awt \\
-                 --initialize-at-run-time=sun.font \\
-                 --initialize-at-run-time=sun.java2d \\
-                 --initialize-at-run-time=sun.font.FontDesignMetrics \\
-                 --initialize-at-run-time=java.awt.image,java.lang.Math.PowCache \\
-                 --initialize-at-run-time=org.apache.poi.util.RandomSingleton \\
-                 --initialize-at-run-time=org.apache.poi.hpsf.PropertySet \\
-                 --initialize-at-run-time=org.apache.poi.util.ChainedProperties \\
-                 --initialize-at-run-time=org.apache.poi.ss.util.SheetUtil \\
-                 --initialize-at-run-time=org.apache.poi.util \\
-                 --initialize-at-run-time=org.apache.poi.ooxml.POIXMLProperties \\
-                 --initialize-at-run-time=org.apache.poi.ooxml.POIXMLDocument \\
-                 --initialize-at-run-time=org.openxmlformats.schemas.officeDocument.x2006 \\
-                 --initialize-at-run-time=org.apache.poi.ooxml \\
-                 --initialize-at-run-time=org.apache.xmlbeans \\
-                 --initialize-at-run-time=org.apache.poi.openxml4j \\
-                 --initialize-at-run-time=org.apache.poi.poifs \\
-                 --initialize-at-run-time=io.grpc \\
-                 --trace-class-initialization=java.awt.Toolkit,org.apache.poi.ss.format.CellFormatPart \\
-                 -H:EnableURLProtocols=http,https \\
-                 -H:+AddAllCharsets \\
-                 -H:+UseContainerSupport \\
-                 -Djava.awt.headless=true \\
-                 -Dapple.awt.headless=true \\
-                 -Dorg.apache.poi.ss.disableAutoColumnWidth=true \\
-                 -Dorg.apache.poi.ss.format.disable.color=true \\
-                 -Dorg.apache.poi.javax.xml.stream.XMLInputFactory=com.sun.xml.internal.stream.XMLInputFactoryImpl \\
-                 -DPOIXMLDocumentPart.read.contentTypes.validation=false \\
-                 -Dorg.apache.poi.ooxml.strict=false
-          EOF
 
       # 第6步: 構建原生執行檔
       # 使用 GraalVM 的 native-image 工具將 Java 應用程序編譯為特定平台的原生執行檔

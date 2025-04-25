@@ -1,5 +1,6 @@
 package io.github.samzhu.auditmate.tools;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -13,11 +14,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.dhatim.fastexcel.Workbook;
+import org.dhatim.fastexcel.Worksheet;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Component;
@@ -44,7 +42,6 @@ import com.google.cloud.resourcemanager.v3.ProjectsClient;
 import com.google.iam.v1.Policy;
 
 import io.github.samzhu.auditmate.dto.GcpAuditResult;
-import io.github.samzhu.auditmate.helper.PoiNativeImageHelper;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -54,213 +51,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 public class GcpAuditTool {
-
-    // 靜態初始化塊，確保 POI 相關類在使用前已初始化
-    static {
-        try {
-            // 設置系統屬性，禁用某些 XMLBeans 功能以避免 Native Image 問題
-            System.setProperty("org.apache.poi.javax.xml.stream.XMLInputFactory", "com.sun.xml.internal.stream.XMLInputFactoryImpl");
-            System.setProperty("POIXMLDocumentPart.read.contentTypes.validation", "false");
-            System.setProperty("org.apache.poi.ooxml.strict", "false");
-            
-            // 初始化 POI 相關類
-            Class.forName("org.apache.poi.ss.formula.udf.IndexedUDFFinder");
-            Class.forName("org.apache.poi.ss.formula.udf.UDFFinder");
-            Class.forName("org.apache.poi.ss.formula.udf.DefaultUDFFinder");
-            Class.forName("org.apache.poi.ss.formula.udf.AggregatingUDFFinder");
-            Class.forName("org.apache.poi.xssf.usermodel.XSSFWorkbook");
-            // 顯式加載POIXMLProperties與POIXMLDocument類以解決初始化問題
-            Class.forName("org.apache.poi.ooxml.POIXMLProperties");
-            Class.forName("org.apache.poi.ooxml.POIXMLDocument");
-            Class.forName("org.apache.poi.ooxml.POIXMLProperties$CoreProperties");
-            Class.forName("org.apache.poi.ooxml.POIXMLProperties$ExtendedProperties");
-            Class.forName("org.apache.poi.ooxml.POIXMLProperties$CustomProperties");
-            Class.forName("org.apache.xmlbeans.XmlObject");
-            Class.forName("org.apache.xmlbeans.impl.values.XmlObjectBase");
-            // 加載 OpenXML 文檔屬性相關類
-            Class.forName("org.openxmlformats.schemas.officeDocument.x2006.customProperties.CTProperties");
-            Class.forName("org.openxmlformats.schemas.officeDocument.x2006.customProperties.impl.CTPropertiesImpl");
-            Class.forName("org.openxmlformats.schemas.officeDocument.x2006.extendedProperties.CTProperties");
-            Class.forName("org.openxmlformats.schemas.officeDocument.x2006.extendedProperties.impl.CTPropertiesImpl");
-            Class.forName("org.openxmlformats.schemas.officeDocument.x2006.customProperties.PropertiesDocument");
-            Class.forName("org.openxmlformats.schemas.officeDocument.x2006.extendedProperties.PropertiesDocument");
-            Class.forName("org.openxmlformats.schemas.officeDocument.x2006.customProperties.impl.PropertiesDocumentImpl");
-            Class.forName("org.openxmlformats.schemas.officeDocument.x2006.extendedProperties.impl.PropertiesDocumentImpl");
-            // 加載 CTWorkbook 相關類
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTWorkbook");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTWorkbookImpl");
-            // 加載 CTWorkbookPr 相關類，解決類型轉換問題
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTWorkbookPr");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTWorkbookPrImpl");
-            // 加載 CTBookViews 相關類，解決類型轉換問題
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTBookViews");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTBookViewsImpl");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTBookView");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTBookViewImpl");
-            // 加載 CTSheets 相關類，解決類型轉換問題
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTSheets");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTSheetsImpl");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTSheet");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTSheetImpl");
-            // 加載 SstDocument 相關類，解決共享字串表問題
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.SstDocument");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.SstDocumentImpl");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTSst");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTSstImpl");
-            // 加載 StyleSheetDocument 相關類，解決樣式表問題
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.StyleSheetDocument");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.StyleSheetDocumentImpl");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTStylesheet");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTStylesheetImpl");
-            // 加載 CTFont 相關類，解決字體問題
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTFont");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTFontImpl");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTFonts");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTFontsImpl");
-            // 加載 CTFontSize 和其他字體屬性相關類
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTFontSize");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTFontSizeImpl");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTFontName");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTFontNameImpl");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTFontFamily");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTFontFamilyImpl");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTColor");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTColorImpl");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTFontScheme");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTFontSchemeImpl");
-            // 加載 CTFill 相關類，解決填充樣式問題
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTFill");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTFillImpl");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTFills");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTFillsImpl");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTPatternFill");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTPatternFillImpl");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.STPatternType");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.STPatternTypeImpl");
-            // 加載 CTBorder 相關類，解決邊框樣式問題
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTBorder");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTBorderImpl");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTBorders");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTBordersImpl");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTBorderPr");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTBorderPrImpl");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.STBorderStyle");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.STBorderStyleImpl");
-            // 加載 CTXf 相關類，解決單元格格式樣式問題
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTXf");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTXfImpl");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTCellXfs");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTCellXfsImpl");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTCellStyleXfs");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTCellStyleXfsImpl");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDxf");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTDxfImpl");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTNumFmt");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTNumFmtImpl");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTNumFmts");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTNumFmtsImpl");
-            // 加載 CTRow 相關類，解決行結構問題
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTRow");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTRowImpl");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTSheetData");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTSheetDataImpl");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTCell");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTCellImpl");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTCols");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTColsImpl");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTCol");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTColImpl");
-            // 加載 CTRst 相關類，解決富文本字符串問題
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTRst");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTRstImpl");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTRElt");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTREltImpl");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTRPrElt");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTRPrEltImpl");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTFontFamily");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.STFontFamily");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.STFontFamilyImpl");
-            // 加載 STXstring 相關類，解決共享類型字符串問題
-            Class.forName("org.openxmlformats.schemas.officeDocument.x2006.sharedTypes.STXstring");
-            Class.forName("org.openxmlformats.schemas.officeDocument.x2006.sharedTypes.impl.STXstringImpl");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.STCellType");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.STCellTypeImpl");
-            // 加載單元格類型枚舉相關類，解決枚舉轉換問題
-            try {
-                Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.STCellType$Enum");
-                Class.forName("org.apache.xmlbeans.StringEnumAbstractBase");
-                Class.forName("org.apache.xmlbeans.StringEnumAbstractBase$Table");
-                Class.forName("org.apache.xmlbeans.impl.values.StringEnumValue");
-                Class.forName("org.apache.xmlbeans.impl.values.JavaStringEnumerationHolderEx");
-                // 加載其他常用枚舉類型
-                Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.STBorderStyle$Enum");
-                Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.STPatternType$Enum");
-                Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.STFontFamily$Enum");
-                Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.STVerticalAlignment$Enum");
-                Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.STHorizontalAlignment$Enum");
-                Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.STVerticalAlignment");
-                Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.STVerticalAlignmentImpl");
-                Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.STHorizontalAlignment");
-                Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.STHorizontalAlignmentImpl");
-            } catch (NoClassDefFoundError e) {
-                log.warn("無法找到枚舉相關類: {}", e.getMessage());
-            }
-            // 加載其他常用 Office XML 類，預防可能的錯誤
-            // DrawingML 相關類（圖表、圖形等）
-            Class.forName("org.openxmlformats.schemas.drawingml.x2006.main.CTTextParagraph");
-            Class.forName("org.openxmlformats.schemas.drawingml.x2006.main.impl.CTTextParagraphImpl");
-            Class.forName("org.openxmlformats.schemas.drawingml.x2006.main.CTTextBody");
-            Class.forName("org.openxmlformats.schemas.drawingml.x2006.main.impl.CTTextBodyImpl");
-            Class.forName("org.openxmlformats.schemas.drawingml.x2006.main.CTRegularTextRun");
-            Class.forName("org.openxmlformats.schemas.drawingml.x2006.main.impl.CTRegularTextRunImpl");
-            Class.forName("org.openxmlformats.schemas.drawingml.x2006.main.CTTextCharacterProperties");
-            Class.forName("org.openxmlformats.schemas.drawingml.x2006.main.impl.CTTextCharacterPropertiesImpl");
-            // 表格相關類
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTTable");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTTableImpl");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTTableColumns");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTTableColumnsImpl");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTTableColumn");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTTableColumnImpl");
-            // 工作表相關類
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTHeaderFooter");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTHeaderFooterImpl");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTSheetView");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTSheetViewImpl");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTSheetViews");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTSheetViewsImpl");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTSheetFormatPr");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTSheetFormatPrImpl");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTSheetProtection");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTSheetProtectionImpl");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTPageMargins");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTPageMarginsImpl");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTPageSetup");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTPageSetupImpl");
-            // 單元格相關類
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTCellAlignment");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTCellAlignmentImpl");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTMergeCell");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTMergeCellImpl");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTMergeCells");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTMergeCellsImpl");
-            // 其他功能相關類
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTHyperlink");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTHyperlinkImpl");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTHyperlinks");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTHyperlinksImpl");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDataValidation");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTDataValidationImpl");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDataValidations");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTDataValidationsImpl");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDefinedName");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTDefinedNameImpl");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDefinedNames");
-            Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.impl.CTDefinedNamesImpl");
-        } catch (ClassNotFoundException e) {
-            log.warn("無法初始化 POI 相關類: {}", e.getMessage());
-        }
-    }
 
     private static final String KMS_SERVICE_NAME = "cloudkms.googleapis.com";
     private static final List<String> REQUIRED_SCOPES = Arrays.asList(
@@ -317,7 +107,8 @@ public class GcpAuditTool {
      * 執行查核並生成報告
      */
     private void executeAudit(GcpAuditResult result, String projectId, String year, String quarter, GoogleCredentials credentials) throws Exception {
-        try (Workbook workbook = PoiNativeImageHelper.createWorkbook()) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try (Workbook workbook = new Workbook(baos, "GcpAuditTool", "1.0")) {
             // 進行 IAM 查核
             showIAM(workbook, projectId);
 
@@ -327,9 +118,12 @@ public class GcpAuditTool {
             // 進行防火牆規則查核
             inventoryFirewallRules(workbook, projectId);
 
+            // 完成工作簿
+            workbook.finish();
+            
             // 生成報表檔案名稱和保存報表
             String fileName = String.format("雲端自行查核_%s%s_GCP_%s.xlsx", year, quarter, projectId);
-            String filePath = saveWorkbookToFile(workbook, fileName);
+            String filePath = saveWorkbookToFile(baos, fileName);
             
             result.setReportFilePath(filePath);
             result.setStatus(SUCCESS_STATUS);
@@ -339,7 +133,9 @@ public class GcpAuditTool {
     /**
      * 儲存 Excel 工作簿到檔案系統
      */
-    private String saveWorkbookToFile(Workbook workbook, String fileName) throws IOException {
+    private String saveWorkbookToFile(ByteArrayOutputStream baos, String fileName) throws IOException {
+        byte[] data = baos.toByteArray();
+        
         // 嘗試寫入到家目錄
         try {
             File homeDir = new File(System.getProperty("user.home"));
@@ -347,9 +143,9 @@ public class GcpAuditTool {
             
             File outputFile = new File(homeDir, fileName);
             try (FileOutputStream fileOut = new FileOutputStream(outputFile)) {
-                PoiNativeImageHelper.writeWorkbook(workbook, fileOut);
+                fileOut.write(data);
+                return outputFile.getAbsolutePath();
             }
-            return outputFile.getAbsolutePath();
         } catch (IOException homeException) {
             // 家目錄寫入失敗，嘗試寫入到臨時目錄
             try {
@@ -359,12 +155,12 @@ public class GcpAuditTool {
                 
                 File outputFile = new File(tempDir, fileName);
                 try (FileOutputStream fileOut = new FileOutputStream(outputFile)) {
-                    PoiNativeImageHelper.writeWorkbook(workbook, fileOut);
+                    fileOut.write(data);
+                    return outputFile.getAbsolutePath();
                 }
-                return outputFile.getAbsolutePath();
             } catch (IOException tempException) {
                 // 如果檔案系統寫入都失敗，則返回 Base64 編碼字串
-                return createBase64EncodedFile(workbook);
+                return createBase64EncodedFile(data);
             }
         }
     }
@@ -394,9 +190,8 @@ public class GcpAuditTool {
     /**
      * 創建 Base64 編碼的檔案內容
      */
-    private String createBase64EncodedFile(Workbook workbook) throws IOException {
-        byte[] bytes = PoiNativeImageHelper.workbookToBytes(workbook);
-        String base64Content = Base64.getEncoder().encodeToString(bytes);
+    private String createBase64EncodedFile(byte[] data) {
+        String base64Content = Base64.getEncoder().encodeToString(data);
         return "data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64," + base64Content;
     }
 
@@ -503,7 +298,7 @@ public class GcpAuditTool {
      * 查詢並記錄防火牆規則
      */
     private void inventoryFirewallRules(Workbook workbook, String projectId) throws Exception {
-        Sheet sheet = workbook.createSheet("Network Rules");
+        Worksheet sheet = workbook.newWorksheet("Network Rules");
         setupFirewallSheetHeader(sheet);
 
         try (FirewallsClient firewallsClient = FirewallsClient.create()) {
@@ -516,8 +311,7 @@ public class GcpAuditTool {
 
             for (Firewall firewall : firewallsClient.list(listFirewallsRequest).iterateAll()) {
                 hasRules = true;
-                Row row = sheet.createRow(rowNum++);
-                populateFirewallRow(row, firewall);
+                populateFirewallRow(sheet, rowNum++, firewall);
             }
 
             if (!hasRules) {
@@ -532,49 +326,47 @@ public class GcpAuditTool {
     /**
      * 設置防火牆表格標題
      */
-    private void setupFirewallSheetHeader(Sheet sheet) {
-        Row headerRow = sheet.createRow(0);
-        headerRow.createCell(0).setCellValue("Direction");
-        headerRow.createCell(1).setCellValue("Source Ranges");
-        headerRow.createCell(2).setCellValue("Destination Ranges");
-        headerRow.createCell(3).setCellValue("Name");
-        headerRow.createCell(4).setCellValue("Purpose");
+    private void setupFirewallSheetHeader(Worksheet sheet) {
+        sheet.value(0, 0, "Direction");
+        sheet.value(0, 1, "Source Ranges");
+        sheet.value(0, 2, "Destination Ranges");
+        sheet.value(0, 3, "Name");
+        sheet.value(0, 4, "Purpose");
 
-        sheet.setColumnWidth(0, 15 * 256);
-        sheet.setColumnWidth(1, 30 * 256);
-        sheet.setColumnWidth(2, 30 * 256);
-        sheet.setColumnWidth(3, 30 * 256);
-        sheet.setColumnWidth(4, 40 * 256);
+        sheet.width(0, 15);
+        sheet.width(1, 30);
+        sheet.width(2, 30);
+        sheet.width(3, 30);
+        sheet.width(4, 40);
     }
 
     /**
      * 填充防火牆規則行
      */
-    private void populateFirewallRow(Row row, Firewall firewall) {
-        row.createCell(0).setCellValue(firewall.getDirection().toString());
-        row.createCell(1).setCellValue(String.join(", ", firewall.getSourceRangesList()));
-        row.createCell(2).setCellValue(String.join(", ", firewall.getDestinationRangesList()));
-        row.createCell(3).setCellValue(firewall.getName());
-        row.createCell(4).setCellValue(firewall.getDescription());
+    private void populateFirewallRow(Worksheet sheet, int rowNum, Firewall firewall) {
+        sheet.value(rowNum, 0, firewall.getDirection().toString());
+        sheet.value(rowNum, 1, String.join(", ", firewall.getSourceRangesList()));
+        sheet.value(rowNum, 2, String.join(", ", firewall.getDestinationRangesList()));
+        sheet.value(rowNum, 3, firewall.getName());
+        sheet.value(rowNum, 4, firewall.getDescription());
     }
 
     /**
      * 創建空的防火牆規則行
      */
-    private void createEmptyFirewallRow(Sheet sheet) {
-        Row row = sheet.createRow(1);
-        row.createCell(0).setCellValue("無");
-        row.createCell(1).setCellValue("無");
-        row.createCell(2).setCellValue("無");
-        row.createCell(3).setCellValue("無");
-        row.createCell(4).setCellValue("無");
+    private void createEmptyFirewallRow(Worksheet sheet) {
+        sheet.value(1, 0, "無");
+        sheet.value(1, 1, "無");
+        sheet.value(1, 2, "無");
+        sheet.value(1, 3, "無");
+        sheet.value(1, 4, "無");
     }
 
     /**
      * 查詢並記錄自攜金鑰(BYOK)
      */
     private void showBYOK(Workbook workbook, String projectId) throws IOException {
-        Sheet sheet = workbook.createSheet("BYOK");
+        Worksheet sheet = workbook.newWorksheet("BYOK");
         setupBYOKSheetHeader(sheet);
 
         if (!isKmsApiEnabled(projectId)) {
@@ -602,11 +394,10 @@ public class GcpAuditTool {
                 createEmptyBYOKRow(sheet);
             }
         } catch (com.google.api.gax.rpc.PermissionDeniedException e) {
-            Row row = sheet.createRow(1);
-            row.createCell(0).setCellValue("權限不足，無法存取 Cloud KMS 服務");
-            row.createCell(1).setCellValue("無");
-            row.createCell(2).setCellValue("無");
-            row.createCell(3).setCellValue("無");
+            sheet.value(1, 0, "權限不足，無法存取 Cloud KMS 服務");
+            sheet.value(1, 1, "無");
+            sheet.value(1, 2, "無");
+            sheet.value(1, 3, "無");
             throw new IOException("無法存取 Cloud KMS 服務: " + e.getMessage(), e);
         }
     }
@@ -614,24 +405,23 @@ public class GcpAuditTool {
     /**
      * 設置 BYOK 表格標題
      */
-    private void setupBYOKSheetHeader(Sheet sheet) {
-        Row headerRow = sheet.createRow(0);
-        headerRow.createCell(0).setCellValue("Key Name");
-        headerRow.createCell(1).setCellValue("Type (ex. RSA-2048)");
-        headerRow.createCell(2).setCellValue("Lifecycle");
-        headerRow.createCell(3).setCellValue("Manager");
+    private void setupBYOKSheetHeader(Worksheet sheet) {
+        sheet.value(0, 0, "Key Name");
+        sheet.value(0, 1, "Type (ex. RSA-2048)");
+        sheet.value(0, 2, "Lifecycle");
+        sheet.value(0, 3, "Manager");
 
-        sheet.setColumnWidth(0, 50 * 256);
-        sheet.setColumnWidth(1, 20 * 256);
-        sheet.setColumnWidth(2, 15 * 256);
-        sheet.setColumnWidth(3, 15 * 256);
+        sheet.width(0, 50);
+        sheet.width(1, 20);
+        sheet.width(2, 15);
+        sheet.width(3, 15);
     }
 
     /**
      * 處理特定位置的金鑰
      */
     private boolean processKeysInLocation(KeyManagementServiceClient client, String projectId, 
-            String locationId, Sheet sheet, int rowNum, boolean hasImportedKeys) {
+            String locationId, Worksheet sheet, int rowNum, boolean hasImportedKeys) {
         
         ListKeyRingsRequest listKeyRingsRequest = ListKeyRingsRequest.newBuilder()
                 .setParent(String.format("projects/%s/locations/%s", projectId, locationId))
@@ -648,7 +438,7 @@ public class GcpAuditTool {
      * 處理特定金鑰環中的金鑰
      */
     private boolean processKeysInKeyRing(KeyManagementServiceClient client, 
-            KeyRing keyRing, Sheet sheet, int rowNum, boolean hasImportedKeys) {
+            KeyRing keyRing, Worksheet sheet, int rowNum, boolean hasImportedKeys) {
         
         ListCryptoKeysRequest listCryptoKeysRequest = ListCryptoKeysRequest.newBuilder()
                 .setParent(keyRing.getName())
@@ -657,11 +447,10 @@ public class GcpAuditTool {
         for (CryptoKey cryptoKey : client.listCryptoKeys(listCryptoKeysRequest).iterateAll()) {
             if (cryptoKey.getImportOnly()) {
                 hasImportedKeys = true;
-                Row row = sheet.createRow(rowNum);
-                row.createCell(0).setCellValue(cryptoKey.getName());
-                row.createCell(1).setCellValue(cryptoKey.getPurpose().toString());
-                row.createCell(2).setCellValue(getKeyLifecycle(client, cryptoKey));
-                row.createCell(3).setCellValue(getKeyManager(cryptoKey));
+                sheet.value(rowNum, 0, cryptoKey.getName());
+                sheet.value(rowNum, 1, cryptoKey.getPurpose().toString());
+                sheet.value(rowNum, 2, getKeyLifecycle(client, cryptoKey));
+                sheet.value(rowNum, 3, getKeyManager(cryptoKey));
             }
         }
         
@@ -671,19 +460,18 @@ public class GcpAuditTool {
     /**
      * 創建空的 BYOK 行
      */
-    private void createEmptyBYOKRow(Sheet sheet) {
-        Row row = sheet.createRow(1);
-        row.createCell(0).setCellValue("無");
-        row.createCell(1).setCellValue("無");
-        row.createCell(2).setCellValue("無");
-        row.createCell(3).setCellValue("無");
+    private void createEmptyBYOKRow(Worksheet sheet) {
+        sheet.value(1, 0, "無");
+        sheet.value(1, 1, "無");
+        sheet.value(1, 2, "無");
+        sheet.value(1, 3, "無");
     }
 
     /**
      * 查詢並記錄 IAM 權限
      */
     private void showIAM(Workbook workbook, String projectId) throws IOException {
-        Sheet sheet = workbook.createSheet("IAM");
+        Worksheet sheet = workbook.newWorksheet("IAM");
         setupIAMSheetHeader(sheet);
 
         try (ProjectsClient projectsClient = ProjectsClient.create()) {
@@ -691,11 +479,10 @@ public class GcpAuditTool {
             Policy policy = projectsClient.getIamPolicy(projectName);
 
             Map<String, IAM> iamMap = generateIAMMap(policy);
-            populateIAMSheet(sheet, new ArrayList<>(iamMap.values()), workbook);
+            populateIAMSheet(sheet, new ArrayList<>(iamMap.values()));
         } catch (Exception e) {
-            Row row = sheet.createRow(1);
-            row.createCell(0).setCellValue("無法取得 IAM 權限資訊");
-            row.createCell(1).setCellValue("無");
+            sheet.value(1, 0, "無法取得 IAM 權限資訊");
+            sheet.value(1, 1, "無");
             throw new IOException("無法取得 IAM 權限資訊: " + e.getMessage(), e);
         }
     }
@@ -703,13 +490,12 @@ public class GcpAuditTool {
     /**
      * 設置 IAM 表格標題
      */
-    private void setupIAMSheetHeader(Sheet sheet) {
-        Row headerRow = sheet.createRow(0);
-        headerRow.createCell(0).setCellValue("User/Group");
-        headerRow.createCell(1).setCellValue("Permissions");
+    private void setupIAMSheetHeader(Worksheet sheet) {
+        sheet.value(0, 0, "User/Group");
+        sheet.value(0, 1, "Permissions");
 
-        sheet.setColumnWidth(0, 20 * 256);
-        sheet.setColumnWidth(1, 50 * 256);
+        sheet.width(0, 20);
+        sheet.width(1, 50);
     }
 
     /**
@@ -732,25 +518,14 @@ public class GcpAuditTool {
     /**
      * 填充 IAM 表格
      */
-    private void populateIAMSheet(Sheet sheet, List<IAM> iamList, Workbook workbook) {
+    private void populateIAMSheet(Worksheet sheet, List<IAM> iamList) {
         int rowNum = 1;
         for (IAM iam : iamList) {
             if (iam.getName().startsWith("user") || iam.getName().startsWith("group")) {
-                Row row = sheet.createRow(rowNum++);
-                row.createCell(0).setCellValue(iam.getName());
-                row.createCell(1).setCellValue(String.join("\n", iam.getRoles()));
-            }
-        }
-
-        CellStyle wrapStyle = workbook.createCellStyle();
-        wrapStyle.setWrapText(true);
-        for (int i = 1; i < rowNum; i++) {
-            Row row = sheet.getRow(i);
-            if (row != null) {
-                Cell cell = row.getCell(1);
-                if (cell != null) {
-                    cell.setCellStyle(wrapStyle);
-                }
+                sheet.value(rowNum, 0, iam.getName());
+                sheet.value(rowNum, 1, String.join("\n", iam.getRoles()));
+                sheet.style(rowNum, 1).wrapText(true).set();
+                rowNum++;
             }
         }
     }
