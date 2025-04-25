@@ -78,7 +78,7 @@ jobs:
         run: ./gradlew nativeCompile -x test --info
         env:
           # 設置 Java 工具選項，包括目標平台參數和記憶體配置
-          JAVA_TOOL_OPTIONS: "${{ matrix.memory_options }} -Dnative-image.target-platform=${{ matrix.target_platform }} -Dnative-image.executor-thread-count=2 ${{ matrix.build_options }}"
+          JAVA_TOOL_OPTIONS: "${{ matrix.memory_options }} -Dnative-image.target-platform=${{ matrix.target_platform }} ${{ matrix.build_options }}"
 
       # 第7步: 確保執行檔有執行權限
       - name: Make MCP server executable
