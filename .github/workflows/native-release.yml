@@ -3,58 +3,58 @@ name: Build Native, Publish Release & Pages
 
 on:
   push:
-    branches: # 當推送到 main 分支時自動觸發
+    branches: # Automatically trigger when pushing to main branch
       - main
-  workflow_dispatch:  # 允許從 GitHub 界面手動觸發
+  workflow_dispatch:  # Allow manual trigger from GitHub UI
 
 
-# 設定必要的權限
+# Set required permissions
 permissions:
-  contents: write  # 允許建立 release
-  pages: write     # 允許部署 GitHub Pages
-  id-token: write  # 用於 GitHub Pages 部署
+  contents: write  # Allow creating release
+  pages: write     # Allow deploying GitHub Pages
+  id-token: write  # For GitHub Pages deployment
 
 
 jobs:
-  build-and-release: # 第一個任務: 構建原生執行檔
-    # 矩陣策略設置: 同時構建 Intel 和 ARM 版本
+  build-and-release: # Job 1: Build native executable
+    # Matrix strategy: build Intel and ARM versions simultaneously
     strategy:
       matrix:
-        arch: [intel]  # 目前只定義 Intel 架構，未來可以添加其他架構
+        arch: [intel]  # Currently only Intel defined, can add more in the future
         include:
-          # Intel 設置
+          # Intel settings
           - arch: intel
-            runner: macos-13  # 使用 macOS 13 (Intel) 的運行環境
-            target_platform: darwin-x86_64  # GraalVM 目標平台
-            artifact_name: gcp-auditmate-mcp-server-darwin-x86_64  # 產物命名與 target_platform 一致
+            runner: macos-13  # Use macOS 13 (Intel) runner
+            target_platform: darwin-x86_64  # GraalVM target platform
+            artifact_name: gcp-auditmate-mcp-server-darwin-x86_64  # Artifact name matches target_platform
             memory_options: ""
             build_options: ""
-          # ARM 設置
+          # ARM settings
           # - arch: arm
-          #   runner: macos-latest  # 使用 macOS-latest (ARM 架構，僅 7GB 記憶體)
-          #   target_platform: darwin-aarch64  # GraalVM 目標平台
-          #   artifact_name: gcp-auditmate-mcp-server-darwin-aarch64  # 產物命名與 target_platform 一致
+          #   runner: macos-latest  # Use macOS-latest (ARM, only 7GB RAM)
+          #   target_platform: darwin-aarch64  # GraalVM target platform
+          #   artifact_name: gcp-auditmate-mcp-server-darwin-aarch64  # Artifact name matches target_platform
           #   memory_options: ""
           #   build_options: ""
 
-    # 根據矩陣變量選擇對應的運行環境
+    # Select runner based on matrix variable
     runs-on: ${{ matrix.runner }}
 
     steps:
-      # 第1步: 檢出代碼庫 (使用淺層檢出以加快速度)
+      # Checkout repository (shallow checkout for speed)
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
-      # 第2步: 設置 GraalVM 環境
+      # Setup GraalVM environment
       - name: Setup GraalVM with Java 21
         uses: graalvm/setup-graalvm@v1
         with:
           java-version: '21'
           distribution: 'graalvm'
           
-      # 新增: 設置 Gradle 快取
+      # Setup Gradle cache
       - name: Setup Gradle Cache
         uses: actions/cache@v3
         with:
@@ -64,7 +64,7 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: ${{ runner.os }}-gradle-
 
-      # 新增: 快取 GraalVM Native Image 構建結果
+      # Cache GraalVM Native Image build results
       - name: Cache GraalVM Native Image
         uses: actions/cache@v3
         with:
@@ -72,38 +72,36 @@ jobs:
           key: ${{ runner.os }}-graalvm-native-${{ github.sha }}
           restore-keys: ${{ runner.os }}-graalvm-native-
 
-      # 第6步: 構建原生執行檔
-      # 使用 GraalVM 的 native-image 工具將 Java 應用程序編譯為特定平台的原生執行檔
+      # Build native executable using GraalVM native-image
       - name: Build Native Executable
         run: ./gradlew nativeCompile -x test --info
         env:
-          # 設置 Java 工具選項，包括目標平台參數和記憶體配置
           JAVA_TOOL_OPTIONS: "${{ matrix.memory_options }} -Dnative-image.target-platform=${{ matrix.target_platform }} ${{ matrix.build_options }}"
 
-      # 第7步: 確保執行檔有執行權限
+      # Ensure the executable has execution permission
       - name: Make MCP server executable
         run: chmod +x build/native/nativeCompile/gcp-auditmate-mcp-server
 
-      # 第8步: 設置版本號
+      # Set version variables
       - name: Set version
         run: |
           echo "VERSION=20250421.1" >> $GITHUB_ENV
           echo "RELEASE_TAG=v20250421.1" >> $GITHUB_ENV
           echo "RELEASE_NAME=Release v20250421.1" >> $GITHUB_ENV
       
-      # 第9步: 準備發布文件 (只保留壓縮檔)
+      # Prepare release files (keep only the zip archive)
       - name: Prepare release files
         run: |
           mkdir -p release
-          echo "複製並重命名執行檔，根據架構命名"
+          echo "Copy and rename executable according to architecture"
           cp build/native/nativeCompile/gcp-auditmate-mcp-server release/${{ matrix.artifact_name }}
           cd release
-          echo "創建包含執行檔的 zip 壓縮包"
+          echo "Create zip archive containing the executable"
           zip -r ${{ matrix.artifact_name }}.zip ${{ matrix.artifact_name }}
-          echo "刪除原始執行檔，只保留 zip"
+          echo "Remove original executable, keep only the zip"
           rm ${{ matrix.artifact_name }}
       
-      # 第10步: 上傳構建產物 (只上傳壓縮檔，設置較短的保留期限以節省空間)
+      # Upload build artifacts (only upload zip, short retention to save space)
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -111,26 +109,26 @@ jobs:
           path: release/${{ matrix.artifact_name }}.zip
           retention-days: 1
 
-  # 第二個任務: 創建 GitHub Release
-  # 此任務依賴於 build-and-release 任務完成
+  # Job 2: Create GitHub Release
+  # This job depends on build-and-release
   create-release:
     needs: build-and-release
     runs-on: ubuntu-latest
     steps:
-      # 第1步: 檢出代碼庫 (使用淺層檢出以加快速度)
+      # Checkout repository (shallow checkout for speed)
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
         
-      # 第2步: 設置 Java 環境
+      # Setup Java environment
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '21'
           
-      # 新增: 設置 Gradle 快取
+      # Setup Gradle cache
       - name: Setup Gradle Cache
         uses: actions/cache@v3
         with:
@@ -140,26 +138,26 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: ${{ runner.os }}-gradle-
       
-      # 第3步: 生成 CycloneDX SBOM
+      # Generate CycloneDX SBOM
       - name: Generate CycloneDX SBOM
         run: |
           ./gradlew cyclonedxBom
           mkdir -p sbom
           cp build/reports/application.cdx.json sbom/gcp-auditmate-mcp-server-bom.json
 
-      # 第4步: 使用 Sunshine 生成 HTML 報告
+      # Generate SBOM HTML report using Sunshine
       - name: Generate SBOM HTML report using Sunshine
         run: |
-          echo "安裝 Python (如果需要)"
+          echo "Install Python (if needed)"
           python -m pip install --upgrade pip
           
-          echo "下載 Sunshine 工具"
+          echo "Download Sunshine tool"
           curl -L -o sunshine.py https://raw.githubusercontent.com/CycloneDX/Sunshine/main/sunshine.py
           
-          echo "生成 HTML 報告"
+          echo "Generate HTML report"
           python sunshine.py -i sbom/gcp-auditmate-mcp-server-bom.json -o sbom/gcp-auditmate-mcp-server-report.html
       
-      # 第5步: 上傳 SBOM 產物 (合併上傳步驟，設置較短的保留期限)
+      # Upload SBOM artifacts (short retention)
       - name: Upload SBOM artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -169,15 +167,14 @@ jobs:
             sbom/gcp-auditmate-mcp-server-report.html
           retention-days: 1
 
-      # 第6步: 下載所有構建產物 (使用 v4 版本的新特性)
+      # Download all build artifacts
       - name: Download artifacts
         id: download
         uses: actions/download-artifact@v4
         with:
           path: release
       
-      # 第7步: 設置版本號
-      # 注意: 這裡重複設置版本號，以確保在這個任務中也能訪問版本信息
+      # Set version variables
       - name: Set version
         run: |
           echo "VERSION=20250421.1" >> $GITHUB_ENV
@@ -186,20 +183,20 @@ jobs:
           echo "INTEL_ARTIFACT=gcp-auditmate-mcp-server-darwin-x86_64" >> $GITHUB_ENV
           echo "ARM_ARTIFACT=gcp-auditmate-mcp-server-darwin-aarch64" >> $GITHUB_ENV
       
-      # 第8步: 準備 GitHub Pages 內容
+      # Prepare GitHub Pages content
       - name: Prepare GitHub Pages content
         run: |
-          echo "檢出網站內容"
+          echo "Checkout website content"
           git clone --depth 1 https://github.com/${{ github.repository }}.git tmp-repo
           mkdir -p pages-content
           cp -r tmp-repo/site/* pages-content/
           
-          echo "複製 SBOM 報告"
+          echo "Copy SBOM report"
           mkdir -p pages-content/sbom
           cp release/sbom-artifacts/gcp-auditmate-mcp-server-report.html pages-content/sbom/index.html
           cp release/sbom-artifacts/gcp-auditmate-mcp-server-bom.json pages-content/sbom/sbom.json
       
-      # 第9步: 上傳 GitHub Pages 內容
+      # Upload GitHub Pages content
       - name: Upload GitHub Pages content
         uses: actions/upload-artifact@v4
         with:
@@ -207,7 +204,7 @@ jobs:
           path: pages-content
           retention-days: 1
 
-      # 第10步: 重新組織文件結構，準備發布 (只處理壓縮檔)
+      # Reorganize files for release (only process zip files)
       - name: Reorganize files
         run: |
           mkdir -p combined_release
@@ -215,7 +212,7 @@ jobs:
           cp release/sbom-artifacts/gcp-auditmate-mcp-server-bom.json combined_release/${{ env.INTEL_ARTIFACT }}-bom.json
           cp release/sbom-artifacts/gcp-auditmate-mcp-server-report.html combined_release/${{ env.INTEL_ARTIFACT }}-report.html
 
-      # 第11步: 創建 GitHub Release
+      # Create GitHub Release
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
@@ -224,46 +221,46 @@ jobs:
           body: |
             GCP Auditmate MCP Server for Mac
             
-            目前提供:
+            Currently available:
             - Intel Mac (x86_64): ${{ env.INTEL_ARTIFACT }}.zip
             - ARM Mac (aarch64): ${{ env.ARM_ARTIFACT }}.zip
             
-            SBOM (軟件物料清單) 文件提供以下格式:
-            - JSON 格式的原始 SBOM 數據
-            - HTML 報告 (由 CycloneDX Sunshine 生成)，包含可視化的依賴關係、漏洞和許可證信息
+            SBOM (Software Bill of Materials) files are provided in the following formats:
+            - JSON format raw SBOM data
+            - HTML report (generated by CycloneDX Sunshine), including visualized dependencies, vulnerabilities, and license information
             
-            查看完整的[互動式 SBOM 報告](https://samzhu.github.io/gcp-auditmate-mcp-server/sbom/)
+            View the full [interactive SBOM report](https://samzhu.github.io/gcp-auditmate-mcp-server/sbom/)
             
             Built on: ${{ github.event.repository.updated_at }}
             Commit: ${{ github.sha }}
-          draft: false  # 設為 true 可以創建草稿 release
-          prerelease: false  # 設為 true 可以標記為預發布版本
+          draft: false  # Set to true to create a draft release
+          prerelease: false  # Set to true to mark as pre-release
           files: |
             combined_release/${{ env.INTEL_ARTIFACT }}.zip
             combined_release/${{ env.INTEL_ARTIFACT }}-bom.json
             combined_release/${{ env.INTEL_ARTIFACT }}-report.html
 
-  # 第三個任務: 部署 GitHub Pages
-  # 此任務依賴於 create-release 任務完成
+  # Job 3: Deploy GitHub Pages
+  # This job depends on create-release
   deploy-pages:
     needs: create-release
     runs-on: ubuntu-latest
     steps:
-      # 第1步: 下載 GitHub Pages 內容 (使用最新的 v4 版本)
+      # Download GitHub Pages content (using latest v4)
       - name: Download GitHub Pages content
         uses: actions/download-artifact@v4
         with:
           name: pages-content
           path: site
       
-      # 第2步: 上傳靜態網站內容
+      # Upload static site as artifact
       - name: Upload static site as artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: site  # 靜態網站內容所在的目錄
-          # retention-days: 1  # 較短的保留期限以節省空間
+          path: site  # Directory containing static site content
+          # retention-days: 1  # Short retention to save space
 
-      # 第3步: 部署到 GitHub Pages
+      # Deploy to GitHub Pages
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
