@@ -39,7 +39,7 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	
-	// Fastexcel (替代 Apache POI)
+	// Fastexcel
 	implementation 'org.dhatim:fastexcel:0.19.0'
 	implementation 'org.dhatim:fastexcel-reader:0.19.0'
 	

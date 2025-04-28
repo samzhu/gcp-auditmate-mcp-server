@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-TW">
 
 <head>
-  <title>GCP AuditMate MCP Server</title>
+  <title>GCP AuditMate MCP 伺服器</title>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <!-- RetroUI Recommended Fonts -->
+  <!-- RetroUI 推薦字體 -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Share+Tech&display=swap" rel="stylesheet" />
@@ -233,7 +233,7 @@
     }
     
     .instruction-step h3:before {
-      content: "Step " counter(step-counter);
+      content: "步驟 " counter(step-counter);
       font-family: var(--font-head);
       display: block;
       font-size: 0.8em;
@@ -292,7 +292,7 @@
 </head>
 
 <body>
-  <a href="https://github.com/samzhu/gcp-auditmate-mcp-server" class="github-corner" aria-label="View source on GitHub">
+  <a href="https://github.com/samzhu/gcp-auditmate-mcp-server" class="github-corner" aria-label="在 GitHub 上查看源碼">
     <svg width="120" height="120" viewBox="0 0 250 250" style="color:#151513; position: absolute; top: 0; right: 0; border: 0;" aria-hidden="true">
       <path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path>
       <path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path>
@@ -301,90 +301,90 @@
   <div class="container">
     <div class="header">
       <h1>GCP AuditMate MCP Server</h1>
-      <p class="hero-text">A self-service audit tool for <span>Google Cloud Platform</span><br/>
-        Powered by <span>Model Completion Protocol (MCP)</span></p>
-      <p>The latest native binaries can be downloaded from the <a href="https://github.com/samzhu/gcp-auditmate-mcp-server/releases">GitHub Releases</a> page.</p>
+      <p class="hero-text">專為 <span>Google Cloud Platform</span> 設計的自助式審核工具<br/>
+        由 <span>Model Completion Protocol (MCP)</span> 技術實現</p>
+      <p>最新的原生二進位檔案可以從 <a href="https://github.com/samzhu/gcp-auditmate-mcp-server/releases">GitHub Releases</a> 頁面下載。</p>
       <div style="margin-top: 20px;">
-        <a href="https://github.com/samzhu/gcp-auditmate-mcp-server" class="btn">GitHub Project</a>
+        <a href="https://github.com/samzhu/gcp-auditmate-mcp-server" class="btn">GitHub 專案</a>
       </div>
     </div>
     
     <div class="divider"></div>
     
-    <h2>Download Options</h2>
+    <h2>下載選項</h2>
     <div class="artifact">
       <span class="badge">macOS</span>
       <span class="badge">Intel</span>
-      <h3>macOS Version (Intel Chip)</h3>
-      <p>For Mac computers with Intel processors.</p>
-      <p>Please go to the <a href="https://github.com/samzhu/gcp-auditmate-mcp-server/releases">GitHub Releases</a> page and download the following file:</p>
+      <h3>macOS 版本 (Intel 晶片)</h3>
+      <p>適用於 Intel 處理器的 Mac 電腦。</p>
+      <p>請前往 <a href="https://github.com/samzhu/gcp-auditmate-mcp-server/releases">GitHub Releases</a> 頁面，下載以下檔案：</p>
       <ul>
-        <li><code>gcp-auditmate-mcp-server-darwin-x86_64.zip</code> (ZIP archive)</li>
+        <li><code>gcp-auditmate-mcp-server-darwin-x86_64.zip</code> (壓縮檔)</li>
       </ul>
     </div>
     
     <div class="artifact">
       <span class="badge">macOS</span>
       <span class="badge">Apple Silicon</span>
-      <h3>macOS Version (Apple Silicon/ARM Chip)</h3>
-      <p>For Mac computers with Apple Silicon chips such as M1, M2, M3, etc.</p>
-      <p>Please go to the <a href="https://github.com/samzhu/gcp-auditmate-mcp-server/releases">GitHub Releases</a> page and download the following file:</p>
+      <h3>macOS 版本 (Apple Silicon/ARM 晶片)</h3>
+      <p>適用於 M1、M2、M3 等 Apple Silicon 晶片的 Mac 電腦。</p>
+      <p>請前往 <a href="https://github.com/samzhu/gcp-auditmate-mcp-server/releases">GitHub Releases</a> 頁面，下載以下檔案：</p>
       <ul>
-        <li><code>gcp-auditmate-mcp-server-darwin-aarch64.zip</code> (ZIP archive)</li>
+        <li><code>gcp-auditmate-mcp-server-darwin-aarch64.zip</code> (壓縮檔)</li>
       </ul>
     </div>
     
     <div class="artifact">
       <span class="badge">SBOM</span>
-      <h3>Software Bill of Materials (SBOM)</h3>
-      <p>We provide a Software Bill of Materials (SBOM) for this application, listing all dependencies and their versions. This helps you understand the software composition, identify potential security risks, and comply with open source license requirements.</p>
-      <p>You can obtain the latest SBOM in the following ways:</p>
+      <h3>軟體元件清單 (SBOM)</h3>
+      <p>我們提供本應用程式的軟體元件清單 (SBOM)，列出所有依賴元件及其版本資訊，有助於了解軟體組成、識別潛在安全風險及遵循開源授權條款要求。</p>
+      <p>您可以透過以下方式獲取最新版本的 SBOM：</p>
       <ul>
-        <li><a href="https://github.com/samzhu/gcp-auditmate-mcp-server/releases/latest/download/gcp-auditmate-mcp-server-darwin-x86_64-bom.json">Download JSON format</a> - Suitable for machine reading and further processing</li>
-        <li><a href="sbom/">View interactive HTML report</a> - Provides an intuitive visual interface showing dependencies, license distribution, and potential vulnerabilities</li>
+        <li><a href="https://github.com/samzhu/gcp-auditmate-mcp-server/releases/latest/download/gcp-auditmate-mcp-server-darwin-x86_64-bom.json">下載 JSON 格式</a> - 適合機器讀取和進一步處理</li>
+        <li><a href="sbom/">查看互動性 HTML 報表</a> - 提供直觀的視覺化介面，展示依賴關係、授權條款分佈和潛在漏洞</li>
       </ul>
-      <p><strong>Tip:</strong> The HTML report is generated by the CycloneDX Sunshine tool and includes interactive charts and tables. It's the best way to understand the software dependency structure.</p>
+      <p><strong>提示：</strong>HTML 報表由 CycloneDX Sunshine 工具產生，包含互動性的圖表和表格，是了解軟體依賴結構的最佳方式。</p>
     </div>
     
     <div class="divider"></div>
     
-    <h2>Instructions</h2>
+    <h2>使用說明</h2>
     <div class="artifact">
       <div class="instruction-step">
-        <h3>Download the Executable</h3>
-        <p>Download the appropriate <strong>executable ZIP file</strong> for your Mac's chip type from the <a href="https://github.com/samzhu/gcp-auditmate-mcp-server/releases">GitHub Releases</a> page and extract it to your preferred directory, such as <code>/Users/username/</code>.</p>
-        <p>If you're not sure which chip your Mac uses, click the Apple menu in the top left > About This Mac to check your processor information.</p>
+        <h3>下載執行檔</h3>
+        <p>從 <a href="https://github.com/samzhu/gcp-auditmate-mcp-server/releases">GitHub Releases</a> 下載適合您 Mac 系統晶片類型的 <strong>執行檔 ZIP 檔</strong> 解壓縮到您習慣的目錄，例如 <code>/Users/username/</code>。</p>
+        <p>如果您不確定您的 Mac 使用哪種晶片，請點擊左上角蘋果圖示 > 關於這台 Mac 查看處理器資訊。</p>
       </div>
       
       <div class="instruction-step">
-        <h3>Set Executable Permission and Remove Security Restrictions</h3>
-        <p>Due to macOS security mechanisms, you may need to run the following two commands to set executable permissions and remove security attributes (replace the path with your actual file path):</p>
+        <h3>設定執行權限和移除安全限制</h3>
+        <p>由於 macOS 的安全機制，您可能需要執行以下兩個命令來設定執行權限並移除安全屬性（路徑請替換為您的實際路徑）：</p>
         
-        <p><strong>For Intel Mac users:</strong></p>
+        <p><strong>Intel Mac 用戶：</strong></p>
         <pre>chmod +x gcp-auditmate-mcp-server-darwin-x86_64
 xattr -cr gcp-auditmate-mcp-server-darwin-x86_64</pre>
         
-        <p><strong>For Apple Silicon/ARM Mac users:</strong></p>
+        <p><strong>Apple Silicon/ARM Mac 用戶：</strong></p>
         <pre>chmod +x gcp-auditmate-mcp-server-darwin-aarch64
 xattr -cr gcp-auditmate-mcp-server-darwin-aarch64</pre>
 
-        <p><strong>Command explanations:</strong></p>
+        <p><strong>指令說明：</strong></p>
         <ul>
-          <li><code>chmod +x</code>: Grants executable permission to the file, allowing it to be run as a program</li>
-          <li><code>xattr -cr</code>: Removes macOS quarantine and security attributes applied to files downloaded from the internet, resolving the "unidentified developer" warning</li>
+          <li><code>chmod +x</code>：賦予檔案執行權限，允許檔案作為程式執行</li>
+          <li><code>xattr -cr</code>：移除 macOS 對從網路下載檔案施加的隔離屬性和安全限制，解決「來自未識別的開發者」的警告問題</li>
         </ul>
       </div>
       
       <div class="instruction-step">
-        <h3>Sign in to Google Cloud</h3>
-        <p>Run the following command in your terminal:</p>
+        <h3>登入 Google Cloud</h3>
+        <p>在終端機執行以下命令：</p>
         <pre>gcloud auth application-default login</pre>
       </div>
       
       <div class="instruction-step">
-        <h3>Configure Claude Desktop</h3>
-        <p>Open the Claude Desktop configuration file. On macOS, the path is usually: <code>/Users/username/Library/Application Support/Claude/claude_desktop_config.json</code></p>
-        <p>Add the following configuration, replacing the command path with the actual path to your executable:</p>
+        <h3>設定 Claude Desktop</h3>
+        <p>打開 Claude Desktop 設定檔。在 macOS 上路徑通常為：<code>/Users/username/Library/Application Support/Claude/claude_desktop_config.json</code></p>
+        <p>新增以下設定，請將命令路徑替換為您實際的執行檔路徑：</p>
         <pre>{  
     "mcpServers": {
         "gcp-auditmate-mcp-server": {
@@ -392,7 +392,7 @@ xattr -cr gcp-auditmate-mcp-server-darwin-aarch64</pre>
         }
     }
 }</pre>
-        <p>Or for the ARM version:</p>
+        <p>或者對於 ARM 版本：</p>
         <pre>{  
     "mcpServers": {
         "gcp-auditmate-mcp-server": {
@@ -403,23 +403,23 @@ xattr -cr gcp-auditmate-mcp-server-darwin-aarch64</pre>
       </div>
       
       <div class="instruction-step">
-        <h3>Use Claude Desktop</h3>
-        <p>Open Claude Desktop and you will see the MCP tool loaded.</p>
-        <img src="https://i.imgur.com/pIV7xF4.jpeg" alt="Claude Desktop MCP tool loaded">
+        <h3>使用 Claude Desktop</h3>
+        <p>打開 Claude Desktop，您會看到 MCP tool 已載入。</p>
+        <img src="https://i.imgur.com/pIV7xF4.jpeg" alt="Claude Desktop MCP工具載入圖示">
         
-        <p>Click the MCP tool to see the feature information for gcp-auditmate-mcp-server.</p>
-        <img src="https://i.imgur.com/yPnYCzv.jpeg" alt="gcp-auditmate-mcp-server feature info">
+        <p>點擊 MCP tool，您將看到 gcp-auditmate-mcp-server 的功能資訊。</p>
+        <img src="https://i.imgur.com/yPnYCzv.jpeg" alt="gcp-auditmate-mcp-server功能資訊">
         
-        <p>Then ask it to help you audit your GCP resources.</p>
-        <img src="https://i.imgur.com/4mveLyz.jpeg" alt="GCP resource self-audit example">
-        <p>After a short wait, the audit file will be generated.</p>
+        <p>接著請他幫您進行 GCP 資源的自我查核。</p>
+        <img src="https://i.imgur.com/4mveLyz.jpeg" alt="GCP資源自我查核示例">
+        <p>接下來稍等一會查核檔案就會產生了。</p>
       </div>
     </div>
     
     <div class="divider"></div>
     
     <footer style="text-align: center; margin-top: 40px; margin-bottom: 20px;">
-      <p>© 2025 GCP AuditMate MCP Server | <a href="https://github.com/samzhu/gcp-auditmate-mcp-server">GitHub</a></p>
+      <p>© 2025 GCP AuditMate MCP 伺服器 | <a href="https://github.com/samzhu/gcp-auditmate-mcp-server">GitHub</a></p>
     </footer>
   </div>
   

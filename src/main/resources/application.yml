@@ -2,13 +2,13 @@ spring:
   application:
     name: gcp-auditmate-mcp-server
   main:
-    banner-mode: off
-    web-application-type: none
+    banner-mode: off # Disable the Spring Boot startup banner to keep the console output clean, especially useful for CLI or server environments where minimal output is preferred.
+    web-application-type: none # Do not start a web server. This is useful for CLI, batch, or background AI jobs where no HTTP endpoint is needed.
   ai:
     mcp:
       server:
-        stdio: true
+        stdio: true # Enable standard input/output for the AI server, allowing it to communicate via the console.
 
 logging:
   level:
-    root: off
+    root: off # Turn off all logging to reduce noise in the output.

@@ -45,8 +45,8 @@ import io.github.samzhu.auditmate.dto.GcpAuditResult;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * GCP 查核工具類
- * 提供 GCP 專案的自我查核功能，並輸出結果到 Excel 檔案
+ * GCP Audit Tool class
+ * Provides self-audit functionality for GCP projects and outputs results to an Excel file.
  */
 @Slf4j
 @Component
@@ -60,18 +60,18 @@ public class GcpAuditTool {
     private static final String SUCCESS_STATUS = "SUCCESS";
 
     /**
-     * 執行 GCP 查核
-     * 
-     * @param projectId GCP 專案 ID
-     * @param year      年份
-     * @param quarter   季度（H1 或 H2）
-     * @return 查核結果訊息
+     * Execute GCP audit
+     *
+     * @param projectId GCP project ID
+     * @param year      Year
+     * @param quarter   Quarter (H1 or H2)
+     * @return Audit result message
      */
-    @Tool(name = "performAudit", description = "執行 GCP 自我查核並生成報告，檢查 IAM 權限、自攜金鑰(BYOK)和防火牆規則")
+    @Tool(name = "performAudit", description = "Perform GCP self-audit and generate a report, checking IAM permissions, BYOK, and firewall rules.")
     public String performAudit(
-            @ToolParam(required = true, description = "要查核的 GCP 專案 ID") String projectId,
-            @ToolParam(required = true, description = "查核年份，例如 2025") String year,
-            @ToolParam(required = true, description = "查核季度，H1 表示上半年，H2 表示下半年") String quarter) {
+            @ToolParam(required = true, description = "GCP project ID to audit") String projectId,
+            @ToolParam(required = true, description = "Audit year, e.g. 2025") String year,
+            @ToolParam(required = true, description = "Audit quarter, H1 for first half, H2 for second half") String quarter) {
 
         GcpAuditResult result = initializeAuditResult(projectId, year, quarter);
         String responseMessage = "";
@@ -92,7 +92,7 @@ public class GcpAuditTool {
     }
 
     /**
-     * 初始化查核結果物件
+     * Initialize audit result object
      */
     private GcpAuditResult initializeAuditResult(String projectId, String year, String quarter) {
         GcpAuditResult result = new GcpAuditResult();
@@ -104,25 +104,25 @@ public class GcpAuditTool {
     }
 
     /**
-     * 執行查核並生成報告
+     * Execute audit and generate report
      */
     private void executeAudit(GcpAuditResult result, String projectId, String year, String quarter, GoogleCredentials credentials) throws Exception {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try (Workbook workbook = new Workbook(baos, "GcpAuditTool", "1.0")) {
-            // 進行 IAM 查核
+            // Perform IAM audit
             showIAM(workbook, projectId);
 
-            // 進行 BYOK 查核
+            // Perform BYOK audit
             showBYOK(workbook, projectId);
 
-            // 進行防火牆規則查核
+            // Perform firewall rules audit
             inventoryFirewallRules(workbook, projectId);
 
-            // 完成工作簿
+            // Complete workbook
             workbook.finish();
             
-            // 生成報表檔案名稱和保存報表
-            String fileName = String.format("雲端自行查核_%s%s_GCP_%s.xlsx", year, quarter, projectId);
+            // Generate report file name and save report
+            String fileName = String.format("CloudSelfAudit_%s%s_GCP_%s.xlsx", year, quarter, projectId);
             String filePath = saveWorkbookToFile(baos, fileName);
             
             result.setReportFilePath(filePath);
@@ -131,12 +131,12 @@ public class GcpAuditTool {
     }
 
     /**
-     * 儲存 Excel 工作簿到檔案系統
+     * Save Excel workbook to file system
      */
     private String saveWorkbookToFile(ByteArrayOutputStream baos, String fileName) throws IOException {
         byte[] data = baos.toByteArray();
         
-        // 嘗試寫入到家目錄
+        // Try writing to home directory
         try {
             File homeDir = new File(System.getProperty("user.home"));
             validateDirectory(homeDir);
@@ -147,7 +147,7 @@ public class GcpAuditTool {
                 return outputFile.getAbsolutePath();
             }
         } catch (IOException homeException) {
-            // 家目錄寫入失敗，嘗試寫入到臨時目錄
+            // If writing to home directory fails, try writing to temp directory
             try {
                 File tempDir = new File(System.getProperty("java.io.tmpdir"));
                 ensureDirectoryExists(tempDir);
@@ -159,27 +159,27 @@ public class GcpAuditTool {
                     return outputFile.getAbsolutePath();
                 }
             } catch (IOException tempException) {
-                // 如果檔案系統寫入都失敗，則返回 Base64 編碼字串
+                // If writing to file system fails, return Base64 encoded string
                 return createBase64EncodedFile(data);
             }
         }
     }
 
     /**
-     * 校驗目錄是否存在且可寫入
+     * Validate if directory exists and is writable
      */
     private void validateDirectory(File directory) throws IOException {
         if (!directory.exists()) {
-            throw new IOException("目錄不存在: " + directory.getAbsolutePath());
+            throw new IOException("Directory does not exist: " + directory.getAbsolutePath());
         }
         
         if (!directory.canWrite()) {
-            throw new IOException("目錄無寫入權限: " + directory.getAbsolutePath());
+            throw new IOException("Directory does not have write permission: " + directory.getAbsolutePath());
         }
     }
 
     /**
-     * 確保目錄存在，若不存在則創建
+     * Ensure directory exists, create if not
      */
     private void ensureDirectoryExists(File directory) {
         if (!directory.exists()) {
@@ -188,7 +188,7 @@ public class GcpAuditTool {
     }
 
     /**
-     * 創建 Base64 編碼的檔案內容
+     * Create Base64 encoded file content
      */
     private String createBase64EncodedFile(byte[] data) {
         String base64Content = Base64.getEncoder().encodeToString(data);
@@ -196,26 +196,26 @@ public class GcpAuditTool {
     }
 
     /**
-     * 處理 IO 異常
+     * Handle IO exception
      */
     private void handleIoException(GcpAuditResult result, IOException e) {
         if (e instanceof java.io.FileNotFoundException) {
             result.setStatus(FAILED_STATUS);
-            result.setErrorMessage("無法寫入檔案: " + e.getMessage() + 
-                    "\n請確認應用程式有權限寫入文件，或是嘗試重新執行程式。");
+            result.setErrorMessage("Unable to write file: " + e.getMessage() + 
+                    "\nPlease ensure the application has permission to write to the file, or try running the program again.");
         } else {
             result.setStatus(AUTH_REQUIRED_STATUS);
-            result.setErrorMessage("請使用以下指令取得 GCP 授權:\n\n" +
+            result.setErrorMessage("Please use the following command to get GCP authorization:\n\n" +
                     "gcloud auth application-default login\n\n" +
-                    "或使用無瀏覽器模式:\n\n" +
+                    "Or use headless mode:\n\n" +
                     "gcloud auth application-default login --no-browser\n\n" +
-                    "授權完成後，請重新執行查核。");
+                    "After authorization is completed, please re-run the audit.");
         }
         result.setStackTrace(getStackTraceAsString(e));
     }
 
     /**
-     * 處理一般異常
+     * Handle generic exception
      */
     private void handleGenericException(GcpAuditResult result, Exception e) {
         result.setStatus(FAILED_STATUS);
@@ -224,37 +224,37 @@ public class GcpAuditTool {
     }
 
     /**
-     * 格式化查核結果訊息
+     * Format audit result message
      */
     private String formatAuditResultMessage(GcpAuditResult result) {
         if (SUCCESS_STATUS.equals(result.getStatus())) {
             return String.format("""
-                    ✅ GCP 查核成功！
+                    ✅ GCP audit succeeded!
 
-                    • 專案 ID：%s
-                    • 年度 / 季度：%s / %s
-                    • 查核時間：%s
-                    • 報告位置：%s
+                    • Project ID: %s
+                    • Year / Quarter: %s / %s
+                    • Audit time: %s
+                    • Report location: %s
 
-                    若需開啟報告，請手動點開上方 Excel 檔案
+                    If you need to open the report, please manually open the above Excel file
                     """, result.getProjectId(), result.getYear(), result.getQuarter(),
                     result.getAuditTime(), result.getReportFilePath());
         } else {
             return String.format("""
-                    ❌ GCP 查核失敗！
+                    ❌ GCP audit failed!
 
-                    • 專案 ID：%s
-                    • 年度 / 季度：%s / %s
-                    • 查核時間：%s
-                    • 錯誤訊息：%s
-                    • 堆疊追蹤：%s
+                    • Project ID: %s
+                    • Year / Quarter: %s / %s
+                    • Audit time: %s
+                    • Error message: %s
+                    • Stack trace: %s
                     """, result.getProjectId(), result.getYear(), result.getQuarter(),
                     result.getAuditTime(), result.getErrorMessage(), result.getStackTrace());
         }
     }
 
     /**
-     * 取得 Google 應用程式默認憑證
+     * Get Google application default credentials
      */
     private GoogleCredentials getCredentials() throws IOException {
         try {
@@ -266,12 +266,12 @@ public class GcpAuditTool {
 
             return credentials;
         } catch (IOException e) {
-            throw new IOException("需要 GCP 授權。請執行 'gcloud auth application-default login' 命令獲取憑證。", e);
+            throw new IOException("GCP authorization is required. Please run the 'gcloud auth application-default login' command to get credentials.", e);
         }
     }
 
     /**
-     * 檢查 KMS API 是否已啟用
+     * Check if KMS API is enabled
      */
     private boolean isKmsApiEnabled(String projectId) throws IOException {
         try {
@@ -295,7 +295,7 @@ public class GcpAuditTool {
     }
 
     /**
-     * 查詢並記錄防火牆規則
+     * Query and record firewall rules
      */
     private void inventoryFirewallRules(Workbook workbook, String projectId) throws Exception {
         Worksheet sheet = workbook.newWorksheet("Network Rules");
@@ -319,12 +319,12 @@ public class GcpAuditTool {
             }
         } catch (Exception e) {
             createEmptyFirewallRow(sheet);
-            throw new Exception("無法取得防火牆規則資訊: " + e.getMessage(), e);
+            throw new Exception("Unable to retrieve firewall rule information: " + e.getMessage(), e);
         }
     }
 
     /**
-     * 設置防火牆表格標題
+     * Set firewall sheet header
      */
     private void setupFirewallSheetHeader(Worksheet sheet) {
         sheet.value(0, 0, "Direction");
@@ -341,7 +341,7 @@ public class GcpAuditTool {
     }
 
     /**
-     * 填充防火牆規則行
+     * Populate firewall rule row
      */
     private void populateFirewallRow(Worksheet sheet, int rowNum, Firewall firewall) {
         sheet.value(rowNum, 0, firewall.getDirection().toString());
@@ -352,18 +352,18 @@ public class GcpAuditTool {
     }
 
     /**
-     * 創建空的防火牆規則行
+     * Create empty firewall rule row
      */
     private void createEmptyFirewallRow(Worksheet sheet) {
-        sheet.value(1, 0, "無");
-        sheet.value(1, 1, "無");
-        sheet.value(1, 2, "無");
-        sheet.value(1, 3, "無");
-        sheet.value(1, 4, "無");
+        sheet.value(1, 0, "None");
+        sheet.value(1, 1, "None");
+        sheet.value(1, 2, "None");
+        sheet.value(1, 3, "None");
+        sheet.value(1, 4, "None");
     }
 
     /**
-     * 查詢並記錄自攜金鑰(BYOK)
+     * Query and record self-carry keys (BYOK)
      */
     private void showBYOK(Workbook workbook, String projectId) throws IOException {
         Worksheet sheet = workbook.newWorksheet("BYOK");
@@ -394,16 +394,16 @@ public class GcpAuditTool {
                 createEmptyBYOKRow(sheet);
             }
         } catch (com.google.api.gax.rpc.PermissionDeniedException e) {
-            sheet.value(1, 0, "權限不足，無法存取 Cloud KMS 服務");
-            sheet.value(1, 1, "無");
-            sheet.value(1, 2, "無");
-            sheet.value(1, 3, "無");
-            throw new IOException("無法存取 Cloud KMS 服務: " + e.getMessage(), e);
+            sheet.value(1, 0, "Insufficient permissions to access Cloud KMS service");
+            sheet.value(1, 1, "None");
+            sheet.value(1, 2, "None");
+            sheet.value(1, 3, "None");
+            throw new IOException("Unable to access Cloud KMS service: " + e.getMessage(), e);
         }
     }
 
     /**
-     * 設置 BYOK 表格標題
+     * Set BYOK sheet header
      */
     private void setupBYOKSheetHeader(Worksheet sheet) {
         sheet.value(0, 0, "Key Name");
@@ -418,7 +418,7 @@ public class GcpAuditTool {
     }
 
     /**
-     * 處理特定位置的金鑰
+     * Process keys in a specific location
      */
     private boolean processKeysInLocation(KeyManagementServiceClient client, String projectId, 
             String locationId, Worksheet sheet, int rowNum, boolean hasImportedKeys) {
@@ -435,7 +435,7 @@ public class GcpAuditTool {
     }
 
     /**
-     * 處理特定金鑰環中的金鑰
+     * Process keys in a specific key ring
      */
     private boolean processKeysInKeyRing(KeyManagementServiceClient client, 
             KeyRing keyRing, Worksheet sheet, int rowNum, boolean hasImportedKeys) {
@@ -458,17 +458,17 @@ public class GcpAuditTool {
     }
 
     /**
-     * 創建空的 BYOK 行
+     * Create empty BYOK row
      */
     private void createEmptyBYOKRow(Worksheet sheet) {
-        sheet.value(1, 0, "無");
-        sheet.value(1, 1, "無");
-        sheet.value(1, 2, "無");
-        sheet.value(1, 3, "無");
+        sheet.value(1, 0, "None");
+        sheet.value(1, 1, "None");
+        sheet.value(1, 2, "None");
+        sheet.value(1, 3, "None");
     }
 
     /**
-     * 查詢並記錄 IAM 權限
+     * Query and record IAM permissions
      */
     private void showIAM(Workbook workbook, String projectId) throws IOException {
         Worksheet sheet = workbook.newWorksheet("IAM");
@@ -481,14 +481,14 @@ public class GcpAuditTool {
             Map<String, IAM> iamMap = generateIAMMap(policy);
             populateIAMSheet(sheet, new ArrayList<>(iamMap.values()));
         } catch (Exception e) {
-            sheet.value(1, 0, "無法取得 IAM 權限資訊");
-            sheet.value(1, 1, "無");
-            throw new IOException("無法取得 IAM 權限資訊: " + e.getMessage(), e);
+            sheet.value(1, 0, "Unable to retrieve IAM permission information");
+            sheet.value(1, 1, "None");
+            throw new IOException("Unable to retrieve IAM permission information: " + e.getMessage(), e);
         }
     }
 
     /**
-     * 設置 IAM 表格標題
+     * Set IAM sheet header
      */
     private void setupIAMSheetHeader(Worksheet sheet) {
         sheet.value(0, 0, "User/Group");
@@ -499,7 +499,7 @@ public class GcpAuditTool {
     }
 
     /**
-     * 生成 IAM 映射
+     * Generate IAM mapping
      */
     private Map<String, IAM> generateIAMMap(Policy policy) {
         Map<String, IAM> iamMap = new HashMap<>();
@@ -516,7 +516,7 @@ public class GcpAuditTool {
     }
 
     /**
-     * 填充 IAM 表格
+     * Populate IAM sheet
      */
     private void populateIAMSheet(Worksheet sheet, List<IAM> iamList) {
         int rowNum = 1;
@@ -531,7 +531,7 @@ public class GcpAuditTool {
     }
 
     /**
-     * IAM 類，用於存儲 IAM 名稱和角色列表
+     * IAM class, used to store IAM name and role list
      */
     private static class IAM {
         private final String name;
@@ -556,7 +556,7 @@ public class GcpAuditTool {
     }
 
     /**
-     * 獲取金鑰的生命週期狀態
+     * Get key lifecycle status
      */
     private String getKeyLifecycle(KeyManagementServiceClient client, CryptoKey cryptoKey) {
         String primaryVersionName = cryptoKey.getPrimary().getName();
@@ -565,14 +565,14 @@ public class GcpAuditTool {
     }
 
     /**
-     * 獲取金鑰的管理人員
+     * Get key manager
      */
     private String getKeyManager(CryptoKey cryptoKey) {
         return cryptoKey.getLabelsMap().getOrDefault("manager", "Unknown");
     }
 
     /**
-     * 將異常的堆疊追蹤轉換為字符串
+     * Convert exception stack trace to string
      */
     private String getStackTraceAsString(Throwable throwable) {
         StringWriter sw = new StringWriter();

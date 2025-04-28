@@ -10,74 +10,74 @@ import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import lombok.Data;
 
 /**
- * GCP 查核結果數據傳輸對象
- * 此類用於返回 GCP 查核工具執行的結果，包含查核報告的檔案路徑和相關元數據
+ * GCP audit result data transfer object.
+ * This class is used to return the results of the GCP audit tool execution, including the report file path and related metadata.
  */
 @Data
 public class GcpAuditResult {
     
     /**
-     * 生成的報告檔案路徑
-     * 包含生成的 Excel 報告檔案的絕對路徑
+     * Generated report file path
+     * Contains the absolute path of the generated Excel report file
      */
-    @ToolParam(description = "GCP 專案 ID")
+    @ToolParam(description = "GCP project ID")
     @JsonProperty("reportFilePath")
-    @JsonPropertyDescription("生成的 Excel 報告檔案的絕對路徑")
+    @JsonPropertyDescription("The absolute path of the generated Excel report file")
     private String reportFilePath;
     
     /**
-     * 查核時間
-     * 執行查核的時間戳記
+     * Audit time
+     * The timestamp when the audit was executed
      */
     @JsonProperty("auditTime")
-    @JsonPropertyDescription("執行查核的時間戳記")
+    @JsonPropertyDescription("The timestamp when the audit was executed")
     private LocalDateTime auditTime;
     
     /**
-     * 專案 ID
-     * 被查核的 GCP 專案 ID
+     * Project ID
+     * The GCP project ID being audited
      */
     @JsonProperty("projectId")
-    @JsonPropertyDescription("被查核的 GCP 專案 ID")
+    @JsonPropertyDescription("The GCP project ID being audited")
     private String projectId;
     
     /**
-     * 年份
-     * 查核的年份，例如 2025
+     * Year
+     * The year of the audit, e.g. 2025
      */
     @JsonProperty("year")
-    @JsonPropertyDescription("查核的年份，例如 2025")
+    @JsonPropertyDescription("The year of the audit, e.g. 2025")
     private String year;
     
     /**
-     * 季度（H1 或 H2）
-     * H1 表示上半年，H2 表示下半年
+     * Quarter (H1 or H2)
+     * H1 means the first half of the year, H2 means the second half
      */
     @JsonProperty("quarter")
-    @JsonPropertyDescription("查核的季度，H1 表示上半年，H2 表示下半年")
+    @JsonPropertyDescription("The quarter of the audit, H1 means the first half, H2 means the second half")
     private String quarter;
     
     /**
-     * 查核狀態
-     * SUCCESS 表示查核成功，FAILED 表示查核失敗
+     * Audit status
+     * SUCCESS means the audit succeeded, FAILED means the audit failed
      */
     @JsonProperty("status")
-    @JsonPropertyDescription("查核狀態，SUCCESS 表示查核成功，FAILED 表示查核失敗")
+    @JsonPropertyDescription("Audit status, SUCCESS means succeeded, FAILED means failed")
     private String status;
     
     /**
-     * 錯誤訊息（如果有）
-     * 當查核失敗時的錯誤訊息
+     * Error message (if any)
+     * The error message when the audit fails
      */
     @JsonProperty("errorMessage")
-    @JsonPropertyDescription("當查核失敗時的錯誤訊息")
+    @JsonPropertyDescription("The error message when the audit fails")
     private String errorMessage;
     
     /**
-     * 堆疊追蹤（如果有）
-     * 當查核失敗時的完整堆疊追蹤信息
+     * Stack trace (if any)
+     * The full stack trace information when the audit fails
      */
     @JsonProperty("stackTrace")
-    @JsonPropertyDescription("當查核失敗時的完整堆疊追蹤信息")
+    @JsonPropertyDescription("The full stack trace information when the audit fails")
     private String stackTrace;
 } 

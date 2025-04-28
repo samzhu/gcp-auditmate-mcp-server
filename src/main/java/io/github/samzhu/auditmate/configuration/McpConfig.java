@@ -8,31 +8,31 @@ import org.springframework.context.annotation.Configuration;
 import io.github.samzhu.auditmate.tools.GcpAuditTool;
 
 /**
- * Spring AI MCP (Model Control Protocol) 工具配置類
- * 用於註冊和配置所有 AI 工具回調
- * 
+ * Spring AI MCP (Model Control Protocol) tool configuration class.
+ * Used to register and configure all AI tool callbacks.
+ *
  * <p>
- * 此配置類負責：
+ * This configuration class is responsible for:
  * <ul>
- * <li>註冊所有工具類為 Spring Bean</li>
- * <li>配置工具回調提供者</li>
- * <li>整合 Spring AI 與工具類的互動</li>
+ * <li>Registering all tool classes as Spring Beans</li>
+ * <li>Configuring tool callback providers</li>
+ * <li>Integrating Spring AI with tool class interactions</li>
  * </ul>
  */
 @Configuration
 public class McpConfig {
 
     /**
-     * 配置工具回調提供者
-     * 將所有工具類註冊到 Spring AI 系統中
-     * 
-     * @param gcpAuditTool       GCP 查核工具
-     * @return ToolCallbackProvider 工具回調提供者實例
+     * Configure the tool callback provider.
+     * Register all tool classes into the Spring AI system.
+     *
+     * @param gcpAuditTool       GCP audit tool
+     * @return ToolCallbackProvider instance
      */
     @Bean
     ToolCallbackProvider fileSystemToolProvider(GcpAuditTool gcpAuditTool) {
-        // 使用建構器模式建立工具回調提供者
-        // 將所有工具類註冊為可被 AI 模型調用的工具
+        // Use builder pattern to create the tool callback provider
+        // Register all tool classes as tools callable by the AI model
         return MethodToolCallbackProvider.builder()
                 .toolObjects(gcpAuditTool)
                 .build();
