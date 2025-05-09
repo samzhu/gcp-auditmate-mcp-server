@@ -6,7 +6,9 @@ gcp-auditmate-mcp-server is a self-service audit toolkit for Google Cloud Platfo
 
 - Automated scanning and reporting for GCP resources
 - Integration with Claude Desktop
-- Built with Spring AI and MCP Server technology, making it easy for non-technical users
+- Built on Spring AI `1.0.0-M7` Model Context Protocol (MCP) Server, enhancing ease of use.
+- Compiled to a GraalVM Native Image for sub-100 ms cold starts, ensuring rapid deployment and responsiveness.
+- Ships with a full SBOM (Software Bill of Materials) for supply-chain compliance.
 
 ## Getting Started
 
